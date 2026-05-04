@@ -1,0 +1,26 @@
+<Project>
+    <PropertyGroup>
+        <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts/</ArtifactsPath>
+        <BaseOutputPath>$(ArtifactsPath)bin/$(MSBuildProjectName)/</BaseOutputPath>
+        <BaseIntermediateOutputPath>$(ArtifactsPath)obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+
+        <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.1.0</VersionPrefix>
+        <VersionSuffix Condition="'$(VersionSuffix)' == ''">local</VersionSuffix>
+        <Version Condition="'$(VersionSuffix)' != ''">$(VersionPrefix)-$(VersionSuffix)</Version>
+        <Version Condition="'$(VersionSuffix)' == ''">$(VersionPrefix)</Version>
+
+        <Deterministic>true</Deterministic>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>$(NoWarn);NU1604</NoWarn>
+        <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0'">$(NoWarn);NU1701</NoWarn>
+
+        <Authors>Alexander Nachtmann</Authors>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/ANcpLua/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers</RepositoryUrl>
+        <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(CI)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+</Project>

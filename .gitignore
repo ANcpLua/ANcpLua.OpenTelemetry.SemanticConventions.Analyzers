@@ -1,0 +1,12 @@
+artifacts/
+bin/
+obj/
+*.user
+.idea/
+.vs/
+.DS_Store
+*.swp
+
+# Local NuGet cache
+.nuget/
+packages/
