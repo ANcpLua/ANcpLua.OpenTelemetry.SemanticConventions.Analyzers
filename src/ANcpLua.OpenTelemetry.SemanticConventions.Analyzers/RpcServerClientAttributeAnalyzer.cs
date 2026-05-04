@@ -30,9 +30,6 @@ public sealed class RpcServerClientAttributeAnalyzer : DiagnosticAnalyzer
     private static readonly ImmutableHashSet<string> ForbiddenClientKeys = ImmutableHashSet.Create(
         "client.address", "client.port");
 
-    private static readonly ImmutableHashSet<string> TagSetterMethodNames = ImmutableHashSet.Create(
-        "SetTag", "AddTag", "SetAttribute", "AddAttribute");
-
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(DiagnosticDescriptors.RpcServerHasClientAddressAttribute);
@@ -47,22 +44,21 @@ public sealed class RpcServerClientAttributeAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeBlock(OperationBlockAnalysisContext context)
     {
-        var keyedInvocations = new List<(string Key, IInvocationOperation Invocation)>();
-
+        var calls = new List<TagSetterCall>();
         foreach (var blockOperation in context.OperationBlocks)
         {
-            CollectTagSetterCalls(blockOperation, keyedInvocations);
+            TagSetterDetection.CollectTagSetterCalls(blockOperation, calls);
         }
 
-        if (keyedInvocations.Count == 0)
+        if (calls.Count == 0)
         {
             return;
         }
 
         var inRpcServerContext = false;
-        foreach (var (key, _) in keyedInvocations)
+        foreach (var call in calls)
         {
-            if (RpcContextKeys.Contains(key))
+            if (RpcContextKeys.Contains(call.Key))
             {
                 inRpcServerContext = true;
                 break;
@@ -74,41 +70,14 @@ public sealed class RpcServerClientAttributeAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        foreach (var (key, invocation) in keyedInvocations)
+        foreach (var call in calls)
         {
-            if (ForbiddenClientKeys.Contains(key))
+            if (ForbiddenClientKeys.Contains(call.Key))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.RpcServerHasClientAddressAttribute,
-                    invocation.Arguments[0].Syntax.GetLocation(),
-                    key));
-            }
-        }
-    }
-
-    private static void CollectTagSetterCalls(IOperation root, List<(string Key, IInvocationOperation Invocation)> sink)
-    {
-        foreach (var descendant in root.DescendantsAndSelf())
-        {
-            if (descendant is not IInvocationOperation invocation)
-            {
-                continue;
-            }
-
-            if (!TagSetterMethodNames.Contains(invocation.TargetMethod.Name))
-            {
-                continue;
-            }
-
-            if (invocation.Arguments.Length == 0)
-            {
-                continue;
-            }
-
-            var firstArg = invocation.Arguments[0].Value;
-            if (firstArg.ConstantValue is { HasValue: true, Value: string key } && !string.IsNullOrEmpty(key))
-            {
-                sink.Add((key, invocation));
+                    call.KeyLocation,
+                    call.Key));
             }
         }
     }
