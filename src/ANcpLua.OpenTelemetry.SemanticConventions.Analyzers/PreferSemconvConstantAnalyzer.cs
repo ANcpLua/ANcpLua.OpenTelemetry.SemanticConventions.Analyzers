@@ -27,7 +27,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     /// <summary>Property-bag key carrying the fully-qualified suggested constant for code-fix providers.</summary>
     public const string SuggestedConstantKey = "SuggestedConstant";
 
-    private const string AttributesNamespace = "OpenTelemetry.SemanticConventions.Attributes";
+    private const string SemconvNamespaceRoot = "OpenTelemetry.SemanticConventions";
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
@@ -58,20 +58,27 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     {
         var catalog = new Dictionary<string, string>(System.StringComparer.Ordinal);
 
-        // Walk the SemConv attributes namespace. The package emits one type per
-        // namespace (HttpAttributes, NetworkAttributes, …); we discover them by
-        // crawling the namespace symbol rather than hardcoding ~90 type names.
-        var ns = compilation.GetTypeByMetadataName(AttributesNamespace + ".HttpAttributes")?.ContainingNamespace
-                 ?? ResolveNamespace(compilation.GlobalNamespace, AttributesNamespace);
+        // Walk every assembly-defined namespace. Collect public const string fields
+        // from any "*Attributes" type whose namespace is or descends from
+        // OpenTelemetry.SemanticConventions. This works for upstream's flat layout
+        // (OpenTelemetry.SemanticConventions.HttpAttributes), qyl's nested layout
+        // (Qyl.OpenTelemetry.SemanticConventions.Attributes.Http.HttpAttributes),
+        // and any other consumer that shares the SemanticConventions namespace root.
+        WalkNamespace(compilation.GlobalNamespace, catalog);
 
-        if (ns is null)
-        {
-            return catalog;
-        }
+        return catalog;
+    }
 
+    private static void WalkNamespace(INamespaceSymbol ns, Dictionary<string, string> catalog)
+    {
         foreach (var type in ns.GetTypeMembers())
         {
             if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!IsSemconvAttributesType(type))
             {
                 continue;
             }
@@ -89,10 +96,6 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
                 if (field.ConstantValue is string value && !string.IsNullOrEmpty(value))
                 {
                     var qualified = $"{type.Name}.{field.Name}";
-                    // First mapping wins. Different attribute classes occasionally
-                    // expose the same const string (e.g. error.* across Error and
-                    // Exception); preferring the first deterministic encounter is
-                    // fine because we only need one valid suggestion.
                     if (!catalog.ContainsKey(value))
                     {
                         catalog.Add(value, qualified);
@@ -101,35 +104,10 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        return catalog;
-    }
-
-    private static INamespaceSymbol? ResolveNamespace(INamespaceSymbol root, string fullName)
-    {
-        var parts = fullName.Split('.');
-        var current = root;
-
-        foreach (var part in parts)
+        foreach (var nested in ns.GetNamespaceMembers())
         {
-            INamespaceSymbol? found = null;
-            foreach (var member in current.GetMembers(part))
-            {
-                if (member is INamespaceSymbol ns)
-                {
-                    found = ns;
-                    break;
-                }
-            }
-
-            if (found is null)
-            {
-                return null;
-            }
-
-            current = found;
+            WalkNamespace(nested, catalog);
         }
-
-        return current;
     }
 
     private static void AnalyzeInvocation(
@@ -185,8 +163,20 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
     private static bool IsSemconvAttributesType(INamedTypeSymbol type)
     {
+        if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         var ns = type.ContainingNamespace?.ToDisplayString();
-        return ns == AttributesNamespace
-               || (ns is not null && ns.StartsWith(AttributesNamespace + ".", System.StringComparison.Ordinal));
+        if (ns is null)
+        {
+            return false;
+        }
+
+        return ns == SemconvNamespaceRoot
+               || ns.StartsWith(SemconvNamespaceRoot + ".", System.StringComparison.Ordinal)
+               || ns.Contains("." + SemconvNamespaceRoot + ".")
+               || ns.EndsWith("." + SemconvNamespaceRoot, System.StringComparison.Ordinal);
     }
 }

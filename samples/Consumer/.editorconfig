@@ -1,0 +1,9 @@
+# Surface every analyzer rule at warning level so dotnet build prints them.
+root = true
+
+[*.cs]
+dotnet_diagnostic.OTSC0001.severity = warning
+dotnet_diagnostic.OTSC0002.severity = warning
+dotnet_diagnostic.OTSC0005.severity = warning
+dotnet_diagnostic.OTSC0010.severity = warning
+dotnet_diagnostic.OTSC0011.severity = warning

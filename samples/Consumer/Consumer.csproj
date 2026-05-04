@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <OutputType>Library</OutputType>
+
+    <!-- Don't fail on Info-level analyzer hints, but DO fail on Warning so we
+         see those clearly. We want to read the diagnostic output, not break. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ReportAnalyzer>true</ReportAnalyzer>
+  </PropertyGroup>
+
+  <!-- The real OpenTelemetry.SemanticConventions package from upstream contrib.
+       This gives us authentic [Obsolete] attributes from v1.41.0 YAML. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\..\opentelemetry-dotnet-contrib\src\OpenTelemetry.SemanticConventions\OpenTelemetry.SemanticConventions.csproj" />
+  </ItemGroup>
+
+  <!-- Reference the analyzer directly so we exercise the real DLL. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\src\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

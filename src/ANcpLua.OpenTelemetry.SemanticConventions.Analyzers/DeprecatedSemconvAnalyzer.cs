@@ -23,7 +23,7 @@ namespace OpenTelemetry.SemanticConventions.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 {
-    private const string SemconvNamespacePrefix = "OpenTelemetry.SemanticConventions.Attributes";
+    private const string SemconvNamespaceRoot = "OpenTelemetry.SemanticConventions";
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
@@ -78,14 +78,28 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 
     private static bool IsSemconvAttributesType(INamedTypeSymbol type)
     {
+        // Match types named "*Attributes" living anywhere under OpenTelemetry.SemanticConventions.
+        // This handles both the upstream flat layout
+        //   (OpenTelemetry.SemanticConventions.HttpAttributes)
+        // and the qyl-style nested layout
+        //   (Qyl.OpenTelemetry.SemanticConventions.Attributes.Http.HttpAttributes —
+        //    note the SemanticConventions root inside Qyl.* still works because we
+        //    look for the substring, not a strict prefix).
+        if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         var ns = type.ContainingNamespace?.ToDisplayString();
         if (ns is null)
         {
             return false;
         }
 
-        return ns == SemconvNamespacePrefix
-               || ns.StartsWith(SemconvNamespacePrefix + ".", System.StringComparison.Ordinal);
+        return ns == SemconvNamespaceRoot
+               || ns.StartsWith(SemconvNamespaceRoot + ".", System.StringComparison.Ordinal)
+               || ns.Contains("." + SemconvNamespaceRoot + ".")
+               || ns.EndsWith("." + SemconvNamespaceRoot, System.StringComparison.Ordinal);
     }
 
     private static bool IsObsoleteAttribute(AttributeData attribute)
