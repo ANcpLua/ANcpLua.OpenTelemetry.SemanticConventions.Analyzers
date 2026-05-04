@@ -59,4 +59,34 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "When a string literal passed to SetTag/AddTag/SetAttribute matches a known semantic-convention attribute name from OpenTelemetry.SemanticConventions.Attributes.*, prefer the typed constant for refactor-safety and discoverability.",
         helpLinkUri: HelpLinkBase + "OTSC0011.md");
+
+    public static readonly DiagnosticDescriptor LiteralMatchesDeprecatedSemconv = new(
+        id: "OTSC0012",
+        title: "String literal matches a deprecated semantic-convention name",
+        messageFormat: "Literal \"{0}\" matches a deprecated semantic-convention attribute: {1}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "When a string literal passed to SetTag/AddTag/SetAttribute matches a semantic-convention attribute that is marked [Obsolete] in the consumer's referenced OpenTelemetry.SemanticConventions package, the call site needs migration regardless of whether a typed constant is being used.",
+        helpLinkUri: HelpLinkBase + "OTSC0012.md");
+
+    public static readonly DiagnosticDescriptor DeprecatedSemconvValue = new(
+        id: "OTSC0014",
+        title: "Deprecated semantic-convention value",
+        messageFormat: "Value \"{0}\" of attribute '{1}' is deprecated: {2}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A constant string passed as the value of a known semantic-convention attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class.",
+        helpLinkUri: HelpLinkBase + "OTSC0014.md");
+
+    public static readonly DiagnosticDescriptor IncubatingSemconvInLibrary = new(
+        id: "OTSC0021",
+        title: "Incubating semantic-convention member used in a library",
+        messageFormat: "Member '{0}' from an Incubating namespace forces every consumer onto its exact package version; copy the constant locally in libraries",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Members under any *.SemanticConventions.Incubating namespace may rename or change values across minor package releases. Library projects (non-exe, non-test) baking direct references push that volatility onto every downstream consumer.",
+        helpLinkUri: HelpLinkBase + "OTSC0021.md");
 }

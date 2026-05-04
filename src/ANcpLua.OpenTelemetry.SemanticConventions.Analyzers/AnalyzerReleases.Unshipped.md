@@ -10,3 +10,6 @@ OTSC0002 | OpenTelemetry.SemanticConventions | Info     | graphql.document is op
 OTSC0005 | OpenTelemetry.SemanticConventions | Warning  | RPC server span must not set client.address or client.port (v1.41.0).
 OTSC0010 | OpenTelemetry.SemanticConventions | Warning  | Use of deprecated semantic-convention constant.
 OTSC0011 | OpenTelemetry.SemanticConventions | Info     | Prefer typed semantic-convention constant over equivalent string literal.
+OTSC0012 | OpenTelemetry.SemanticConventions | Warning  | String literal in a tag-setter call matches a deprecated semantic-convention attribute name.
+OTSC0014 | OpenTelemetry.SemanticConventions | Warning  | Constant value of a known semantic-convention attribute matches a deprecated value member.
+OTSC0021 | OpenTelemetry.SemanticConventions | Warning  | Incubating semantic-convention member referenced from a library project.

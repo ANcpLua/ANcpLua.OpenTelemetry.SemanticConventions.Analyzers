@@ -27,8 +27,6 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     /// <summary>Property-bag key carrying the fully-qualified suggested constant for code-fix providers.</summary>
     public const string SuggestedConstantKey = "SuggestedConstant";
 
-    private const string SemconvNamespaceRoot = "OpenTelemetry.SemanticConventions";
-
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(DiagnosticDescriptors.PreferSemconvConstant);
@@ -78,7 +76,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            if (!IsSemconvAttributesType(type))
+            if (!SemconvNamespace.IsAttributesType(type))
             {
                 continue;
             }
@@ -161,22 +159,4 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
             suggestedConstant));
     }
 
-    private static bool IsSemconvAttributesType(INamedTypeSymbol type)
-    {
-        if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var ns = type.ContainingNamespace?.ToDisplayString();
-        if (ns is null)
-        {
-            return false;
-        }
-
-        return ns == SemconvNamespaceRoot
-               || ns.StartsWith(SemconvNamespaceRoot + ".", System.StringComparison.Ordinal)
-               || ns.Contains("." + SemconvNamespaceRoot + ".")
-               || ns.EndsWith("." + SemconvNamespaceRoot, System.StringComparison.Ordinal);
-    }
 }
