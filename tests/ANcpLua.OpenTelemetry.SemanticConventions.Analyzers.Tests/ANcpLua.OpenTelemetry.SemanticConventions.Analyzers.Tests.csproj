@@ -16,9 +16,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
-    <!-- Override transitive 1.0.1 with modern Roslyn. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.10.0" />
+    <!-- Pin Roslyn at 5.3.0 to match the version the analyzer assembly was built against. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,6 +28,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.csproj" />
+  </ItemGroup>
+
+  <!-- Imported AL-side test files use xunit.v3 + AwesomeAssertions + ANcpLua.Roslyn.Utilities.Testing
+       which OTSC's xunit v2 + Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit setup does not provide.
+       Excluded from compilation pending test-framework alignment (see PR follow-up tracker). -->
+  <ItemGroup>
+    <Compile Remove="Imports\**\*.cs" />
+    <None Include="Imports\**\*.cs" />
   </ItemGroup>
 
 </Project>

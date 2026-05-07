@@ -9,7 +9,7 @@
     <AssemblyName>OpenTelemetry.SemanticConventions.Analyzers</AssemblyName>
 
     <PackageId>ANcpLua.OpenTelemetry.SemanticConventions.Analyzers</PackageId>
-    <Description>Roslyn diagnostic analyzers for OpenTelemetry.SemanticConventions consumers — flags deprecated attribute usage and v1.41.0 breaking-change violations at compile time.</Description>
+    <Description>Roslyn diagnostic analyzers for OpenTelemetry.SemanticConventions consumers — flags deprecated attribute usage, v1.41.0 breaking-change violations, and broader OTel observability/instrumentation patterns at compile time.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>opentelemetry;semantic-conventions;roslyn;analyzer;otel</PackageTags>
 
@@ -23,27 +23,62 @@
     <IncludeSymbols>false</IncludeSymbols>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <NoWarn>$(NoWarn);RS1041</NoWarn>
+    <NoWarn>$(NoWarn);RS1041;RS1025;RS1026;RS0030;RS1038;RS2000;RS2008;IDE0055;CA2249;CS1591;CS1570;CS1572;CS1573;CS1574</NoWarn>
   </PropertyGroup>
 
+  <!-- Global usings consumed by the imported analyzer + codefix files -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all">
+    <Using Include="System"/>
+    <Using Include="System.Collections.Generic"/>
+    <Using Include="System.Collections.Concurrent"/>
+    <Using Include="System.Collections.Immutable"/>
+    <Using Include="System.Composition"/>
+    <Using Include="System.Diagnostics.CodeAnalysis"/>
+    <Using Include="System.Linq"/>
+    <Using Include="System.Threading"/>
+    <Using Include="System.Threading.Tasks"/>
+    <Using Include="Microsoft.CodeAnalysis"/>
+    <Using Include="Microsoft.CodeAnalysis.CSharp"/>
+    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
+    <Using Include="Microsoft.CodeAnalysis.Diagnostics"/>
+    <Using Include="Microsoft.CodeAnalysis.Operations"/>
+    <Using Include="Microsoft.CodeAnalysis.CodeFixes"/>
+    <Using Include="Microsoft.CodeAnalysis.CodeActions"/>
+    <Using Include="ANcpLua.Roslyn.Utilities"/>
+    <Using Include="ANcpLua.Roslyn.Utilities.Analyzers"/>
+    <Using Include="ANcpLua.Roslyn.Utilities.Contexts"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ANcpLua.Roslyn.Utilities" Version="2.2.9" PrivateAssets="all"/>
+    <PackageReference Include="ANcpLua.Roslyn.Utilities.Polyfills" Version="2.2.9" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.3.0" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
+  <!-- Wire the imported Resources.resx so its embedded resource name matches what
+       Imports/Resources.Designer.cs expects (namespace ANcpLua.Analyzers.Resources). -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="$(OutputPath)\$(AssemblyName).dll"
-          Pack="true"
-          PackagePath="analyzers/dotnet/cs"
-          Visible="false" />
+    <Compile Update="Imports\Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx"/>
+    <EmbeddedResource Update="Imports\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" LogicalName="ANcpLua.Analyzers.Resources.resources"/>
+    <Compile Update="Imports\CodeFixResources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="CodeFixResources.resx"/>
+    <EmbeddedResource Update="Imports\CodeFixResources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="CodeFixResources.Designer.cs" LogicalName="ANcpLua.Analyzers.CodeFixes.CodeFixResources.resources"/>
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="$(OutputPath)\$(AssemblyName).dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md"/>
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md"/>
   </ItemGroup>
 
 </Project>

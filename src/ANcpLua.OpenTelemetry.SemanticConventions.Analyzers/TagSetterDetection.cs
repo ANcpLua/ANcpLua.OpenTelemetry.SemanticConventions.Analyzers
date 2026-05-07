@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
+using MsOperationExtensions = Microsoft.CodeAnalysis.Operations.OperationExtensions;
 
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
@@ -45,7 +46,7 @@ internal static class TagSetterDetection
         IOperation root,
         List<TagSetterCall> sink)
     {
-        foreach (var descendant in root.DescendantsAndSelf())
+        foreach (var descendant in MsOperationExtensions.DescendantsAndSelf(root))
         {
             if (descendant is not IInvocationOperation invocation)
             {
