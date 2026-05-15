@@ -70,15 +70,33 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\..\README.md" Pack="true" PackagePath="\"/>
-    <None Include="$(OutputPath)\$(AssemblyName).dll"
-          Pack="true"
-          PackagePath="analyzers/dotnet/cs"
-          Visible="false"/>
   </ItemGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md"/>
     <AdditionalFiles Include="AnalyzerReleases.Unshipped.md"/>
   </ItemGroup>
+
+  <!-- Bundle the analyzer assembly + its non-host runtime dependencies into
+       analyzers/dotnet/cs so the Roslyn analyzer host can resolve every
+       imported type at consumer-load time. Without this the host fails with
+       CS8032 / AD1000 because ANcpLua.Roslyn.Utilities.dll (provider of
+       AlAnalyzer's DiagnosticAnalyzerBase, OperationContext, etc.) is not
+       present next to the analyzer DLL. Microsoft.CodeAnalysis.CSharp and
+       its .Workspaces sister are intentionally NOT bundled — they are
+       provided by every analyzer host (csc, dotnet build, Roslyn IDE host)
+       and bundling them produces type-identity conflicts at load time.
+       Polyfills is source-only, so it has no runtime DLL to bundle. -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToPackage</TargetsForTfmSpecificContentInPackage>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <Target Name="_AddAnalyzersToPackage" Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutputPath)$(AssemblyName).dll"          PackagePath="analyzers/dotnet/cs"/>
+      <TfmSpecificPackageFile Include="$(OutputPath)ANcpLua.Roslyn.Utilities.dll" PackagePath="analyzers/dotnet/cs"/>
+    </ItemGroup>
+  </Target>
 
 </Project>
