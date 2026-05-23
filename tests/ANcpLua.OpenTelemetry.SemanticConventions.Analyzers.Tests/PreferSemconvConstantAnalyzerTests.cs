@@ -54,6 +54,11 @@ public class PreferSemconvConstantAnalyzerTests
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
 
+        public readonly struct ActivityLink
+        {
+            public ActivityLink(object context, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
+        }
+
         public sealed class Counter<T>
         {
             public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
@@ -263,6 +268,33 @@ public class PreferSemconvConstantAnalyzerTests
                         {
                             { {|#0:"server.address"|}, "localhost" },
                         });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityLink_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                ActivityLink Create(object context)
+                {
+                    return new ActivityLink(
+                        context,
+                        tags: new[] { new KeyValuePair<string, object?>({|#0:"server.address"|}, "localhost") });
                 }
             }
             """;

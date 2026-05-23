@@ -172,6 +172,18 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 liveObsoleteAttributeValues,
                 isProductionEmission: true);
         }
+
+        if (IsActivityLinkCreation(objectCreation.Type)
+            && TryGetArgumentByNameOrOrdinal(objectCreation.Arguments, "tags", 1, out var linkTagsArgument))
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                linkTagsArgument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+        }
     }
 
     private static void AnalyzeCollectionExpression(
@@ -868,6 +880,9 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
 
+    private static bool IsActivityLinkCreation(ITypeSymbol? type) =>
+        type?.Name is "ActivityLink";
+
     private static bool IsActivitySourceStartActivity(IInvocationOperation invocation) =>
         invocation.TargetMethod.Name == "StartActivity"
         && IsActivitySourceLike(invocation.TargetMethod.ContainingType);
@@ -941,7 +956,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             }
 
             if (argument.Parent is IObjectCreationOperation objectCreation
-                && IsActivityEventTagsArgument(objectCreation, argument))
+                && (IsActivityEventTagsArgument(objectCreation, argument)
+                    || IsActivityLinkTagsArgument(objectCreation, argument)))
             {
                 return true;
             }
@@ -1009,7 +1025,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             }
 
             if (argument.Parent is IObjectCreationOperation objectCreation
-                && IsActivityEventTagsArgument(objectCreation, argument))
+                && (IsActivityEventTagsArgument(objectCreation, argument)
+                    || IsActivityLinkTagsArgument(objectCreation, argument)))
             {
                 return true;
             }
@@ -1060,6 +1077,13 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         IsActivityEventCreation(objectCreation.Type)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 2);
+
+    private static bool IsActivityLinkTagsArgument(
+        IObjectCreationOperation objectCreation,
+        IArgumentOperation argument) =>
+        IsActivityLinkCreation(objectCreation.Type)
+        && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
+            || argument.Parameter?.Ordinal == 1);
 
     private static bool IsActivitySourceTagsArgument(
         IInvocationOperation invocation,

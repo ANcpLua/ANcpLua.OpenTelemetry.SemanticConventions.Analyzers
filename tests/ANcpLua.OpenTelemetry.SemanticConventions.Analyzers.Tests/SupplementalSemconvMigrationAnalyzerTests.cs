@@ -60,6 +60,11 @@ public class SupplementalSemconvMigrationAnalyzerTests
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
 
+        public readonly struct ActivityLink
+        {
+            public ActivityLink(object context, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
+        }
+
         public interface ILogger
         {
             void Log(string level, int eventId, IEnumerable<KeyValuePair<string, object?>> state, object? exception = null, object? formatter = null);
@@ -521,6 +526,32 @@ public class SupplementalSemconvMigrationAnalyzerTests
                         {
                             { {|#0:"message.id"|}, "42" },
                         });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityLink_Tags_Report_Production_Manual_Review_Once()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                ActivityLink Create(object context)
+                {
+                    return new ActivityLink(
+                        context,
+                        tags: new[] { new KeyValuePair<string, object?>({|#0:"message.id"|}, "42") });
                 }
             }
             """;
