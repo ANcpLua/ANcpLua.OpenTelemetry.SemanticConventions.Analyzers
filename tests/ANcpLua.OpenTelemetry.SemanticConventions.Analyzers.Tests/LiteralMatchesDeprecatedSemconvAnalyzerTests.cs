@@ -11,6 +11,8 @@ namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
 public class LiteralMatchesDeprecatedSemconvAnalyzerTests
 {
     private const string SemconvFixture = """
+        using System.Collections.Generic;
+
         #pragma warning disable CS0618
         namespace OpenTelemetry.SemanticConventions
         {
@@ -26,6 +28,16 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         public class FakeSpan
         {
             public FakeSpan SetTag(string key, object? value) => this;
+        }
+
+        public sealed class ResourceBuilder
+        {
+            public ResourceBuilder AddAttributes(IEnumerable<KeyValuePair<string, object?>> attributes) => this;
+        }
+
+        public readonly struct ActivityEvent
+        {
+            public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
         """;
 
@@ -85,6 +97,89 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
                 void M(FakeSpan s)
                 {
                     s.SetTag(OpenTelemetry.SemanticConventions.HttpAttributes.AttributeHttpMethod, "GET");
+                }
+            }
+            """;
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ResourceBuilder_AddAttributes_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ResourceBuilder resourceBuilder)
+                {
+                    resourceBuilder.AddAttributes(new Dictionary<string, object?>
+                    {
+                        [{|#0:"http.method"|}] = "GET",
+                    });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityEvent_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                ActivityEvent Create()
+                {
+                    return new ActivityEvent(
+                        "legacy.event",
+                        tags: new Dictionary<string, object?>
+                        {
+                            { {|#0:"http.method"|}, "GET" },
+                        });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Payload_TypedConstantKey_Remains_Skipped_By_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ResourceBuilder resourceBuilder)
+                {
+                    resourceBuilder.AddAttributes(new[]
+                    {
+                        new KeyValuePair<string, object?>(
+                            OpenTelemetry.SemanticConventions.HttpAttributes.AttributeHttpMethod,
+                            "GET"),
+                    });
                 }
             }
             """;

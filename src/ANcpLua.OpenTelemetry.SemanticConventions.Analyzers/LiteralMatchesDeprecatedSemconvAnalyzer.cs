@@ -40,6 +40,9 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeInvocation(ctx, deprecationMap),
             OperationKind.Invocation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeObjectCreation(ctx, deprecationMap),
+            OperationKind.ObjectCreation);
     }
 
     private static Dictionary<string, string> BuildDeprecationMap(Compilation compilation)
@@ -111,35 +114,37 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         Dictionary<string, string> deprecationMap)
     {
         var invocation = (IInvocationOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeInvocation(
+            invocation,
+            payload => ReportIfDeprecated(context, deprecationMap, payload));
+    }
 
-        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
-            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArg))
-        {
-            return;
-        }
+    private static void AnalyzeObjectCreation(
+        OperationAnalysisContext context,
+        Dictionary<string, string> deprecationMap)
+    {
+        var objectCreation = (IObjectCreationOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
+            objectCreation,
+            payload => ReportIfDeprecated(context, deprecationMap, payload));
+    }
 
-        var keyArgValue = TagSetterDetection.UnwrapConversion(keyArg.Value);
-
+    private static void ReportIfDeprecated(
+        OperationAnalysisContext context,
+        Dictionary<string, string> deprecationMap,
+        TelemetryAttributePayloadLiteral payload)
+    {
         // Only fire on bare literals; OTSC0010 already handles typed-constant references.
-        if (keyArgValue.Syntax is not LiteralExpressionSyntax)
-        {
-            return;
-        }
-
-        if (!TagSetterDetection.TryGetNonEmptyStringConstant(keyArgValue, out var literal))
-        {
-            return;
-        }
-
-        if (!deprecationMap.TryGetValue(literal, out var deprecationMessage))
+        if (!payload.KeyIsBareLiteral
+            || !deprecationMap.TryGetValue(payload.Key, out var deprecationMessage))
         {
             return;
         }
 
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.LiteralMatchesDeprecatedSemconv,
-            keyArg.Syntax.GetLocation(),
-            literal,
+            payload.KeySyntax.GetLocation(),
+            payload.Key,
             deprecationMessage));
     }
 }
