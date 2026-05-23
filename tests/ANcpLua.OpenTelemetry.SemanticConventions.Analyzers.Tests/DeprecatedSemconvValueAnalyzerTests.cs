@@ -310,6 +310,34 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_DeprecatedValue_Reports_OTSC0014_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags["http.request.method"] = {|#0:"_LEGACY_GET"|};
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task MetricCounter_Add_DeprecatedValue_Reports_OTSC0014()
     {
         const string testCode = SemconvFixture + """

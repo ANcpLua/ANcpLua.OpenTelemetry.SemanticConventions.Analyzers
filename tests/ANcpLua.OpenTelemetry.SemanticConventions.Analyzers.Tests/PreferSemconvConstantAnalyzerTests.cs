@@ -339,6 +339,34 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_Hardcoded_Key_Reports_OTSC0011_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags[{|#0:"server.address"|}] = "localhost";
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task MetricCounter_Add_Hardcoded_Key_Reports_OTSC0011()
     {
         const string testCode = SemconvFixture + """

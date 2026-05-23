@@ -43,6 +43,9 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeObjectCreation(ctx, deprecationMap),
             OperationKind.ObjectCreation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeAssignment(ctx, deprecationMap),
+            OperationKind.SimpleAssignment);
     }
 
     private static Dictionary<string, string> BuildDeprecationMap(Compilation compilation)
@@ -126,6 +129,16 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         var objectCreation = (IObjectCreationOperation)context.Operation;
         TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
             objectCreation,
+            payload => ReportIfDeprecated(context, deprecationMap, payload));
+    }
+
+    private static void AnalyzeAssignment(
+        OperationAnalysisContext context,
+        Dictionary<string, string> deprecationMap)
+    {
+        var assignment = (ISimpleAssignmentOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeAssignment(
+            assignment,
             payload => ReportIfDeprecated(context, deprecationMap, payload));
     }
 

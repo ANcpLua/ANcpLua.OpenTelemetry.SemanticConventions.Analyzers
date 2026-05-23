@@ -594,6 +594,33 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Add_Reports_Production_Manual_Review_Once()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags.Add({|#0:"message.id"|}, "42");
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Logger_Log_State_Report_Production_Manual_Review_Once()
     {
         const string testCode = FakeTelemetry + """
@@ -893,6 +920,90 @@ public class SupplementalSemconvMigrationAnalyzerTests
                     {
                         { "cloud.platform", "azure.aks" },
                     };
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Add_Exact_Value_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags.Add("cloud.platform", {|#0:"azure_aks"|});
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        const string fixedCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags.Add("cloud.platform", "azure.aks");
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_Exact_Value_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags["cloud.platform"] = {|#0:"azure_aks"|};
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        const string fixedCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>();
+                    tags["cloud.platform"] = "azure.aks";
 
                     source.StartActivity("GET /users", tags: tags);
                 }
