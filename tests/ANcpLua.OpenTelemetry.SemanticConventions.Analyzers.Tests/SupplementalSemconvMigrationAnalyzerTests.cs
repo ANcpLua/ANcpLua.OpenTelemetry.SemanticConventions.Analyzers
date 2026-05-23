@@ -239,6 +239,58 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
+    public async Task Older_Schema_Url_Context_Downgrades_To_Info()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                private const string SchemaUrl = "https://opentelemetry.io/schemas/1.40.0";
+
+                void M(Meter meter)
+                {
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0032", DiagnosticSeverity.Info)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Current_Schema_Url_Context_Keeps_Production_Error()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                private const string SchemaUrl = "https://opentelemetry.io/schemas/1.41.0";
+
+                void M(Meter meter)
+                {
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Generated_Source_Is_Ignored_Or_Downgraded()
     {
         const string testCode = FakeTelemetry + """

@@ -5,6 +5,10 @@ namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 internal static class SemconvIntentClassifier
 {
+    private const string SchemaUrlPrefix = "https://opentelemetry.io/schemas/";
+
+    private static readonly Version CurrentSchemaVersion = new(1, 41, 0);
+
     private static readonly string[] DowngradeFragments =
     [
         "Legacy",
@@ -77,6 +81,27 @@ internal static class SemconvIntentClassifier
             || path.IndexOf(".Generated.", StringComparison.OrdinalIgnoreCase) >= 0
             || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
             || path.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool HasLegacySchemaUrlContext(IOperation operation)
+    {
+        var scope = FindContainingType(operation.Syntax);
+        if (scope is null)
+        {
+            return false;
+        }
+
+        foreach (var descendant in scope.DescendantNodes())
+        {
+            if (descendant is LiteralExpressionSyntax literal
+                && literal.IsKind(SyntaxKind.StringLiteralExpression)
+                && IsLegacySchemaUrl(literal.Token.ValueText))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsTestProject(AnalyzerOptions options) =>
@@ -175,5 +200,43 @@ internal static class SemconvIntentClassifier
         }
 
         return false;
+    }
+
+    private static TypeDeclarationSyntax? FindContainingType(SyntaxNode syntax)
+    {
+        for (var current = syntax; current is not null; current = current.Parent)
+        {
+            if (current is TypeDeclarationSyntax typeDeclaration)
+            {
+                return typeDeclaration;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsLegacySchemaUrl(string value)
+    {
+        if (!value.StartsWith(SchemaUrlPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var versionStart = SchemaUrlPrefix.Length;
+        var versionEnd = versionStart;
+        while (versionEnd < value.Length
+            && (char.IsDigit(value[versionEnd]) || value[versionEnd] == '.'))
+        {
+            versionEnd++;
+        }
+
+        if (versionEnd <= versionStart)
+        {
+            return false;
+        }
+
+        var versionText = value.Substring(versionStart, versionEnd - versionStart).TrimEnd('.');
+        return Version.TryParse(versionText, out var version)
+            && version < CurrentSchemaVersion;
     }
 }
