@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -12,8 +13,16 @@ var outputPath = Path.Combine(repoRoot, "docs", "ANcpLua.OpenTelemetry.SemanticC
 var check = args.Any(arg => string.Equals(arg, "--check", StringComparison.OrdinalIgnoreCase)
     || string.Equals(arg, "check", StringComparison.OrdinalIgnoreCase)
     || string.Equals(arg, "validate", StringComparison.OrdinalIgnoreCase));
+var audit = args.Any(arg => string.Equals(arg, "--audit", StringComparison.OrdinalIgnoreCase)
+    || string.Equals(arg, "audit", StringComparison.OrdinalIgnoreCase));
 
 var content = GenerateMarkdown(repoRoot);
+
+if (audit)
+{
+    Console.Write(GenerateAuditText());
+    return 0;
+}
 
 if (check)
 {
@@ -142,6 +151,18 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine();
     sb.AppendLine($"Curated changelog mentions: {entries.Length}. Live metadata rows: {metadataCount}. Supplemental diagnostic rows: {supplementalCount}. Exact supplemental replacements: {exactCount}. Manual/context-sensitive supplemental rows: {manualCount}. Removed/no-replacement supplemental rows: {removedCount}. Guidance-only rows: {guidanceCount}.");
     sb.AppendLine($"Supplemental attribute-value fallback rows: {valueEntries.Length}. Exact value replacements: {exactValueCount}. Manual value rows: {manualValueCount}. Removed/no-replacement value rows: {removedValueCount}. These rows are used only when the same key/value is not covered by live `[Obsolete]` metadata from the referenced package.");
+
+    AppendCompletionAudit(
+        sb,
+        entries,
+        valueEntries,
+        metadataCount,
+        supplementalCount,
+        exactCount,
+        manualCount,
+        removedCount,
+        guidanceCount);
+
     sb.AppendLine();
     sb.AppendLine("| Version | Domain | Total | Live metadata | Supplemental | Exact supplemental | Manual/context | Removed/no replacement |");
     sb.AppendLine("| -- | -- | --: | --: | --: | --: | --: | --: |");
@@ -240,6 +261,98 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("The `--check` mode fails if the generated markdown differs from the checked-in file.");
 
     return sb.ToString().ReplaceLineEndings("\n");
+}
+
+static string GenerateAuditText()
+{
+    SemconvMigrationCatalog.Validate();
+    var entries = SemconvMigrationCatalog.Entries;
+    var valueEntries = SemconvMigrationCatalog.SupplementalAttributeValueEntries;
+    var metadataCount = Count(entries, entry => entry.MigrationKind == SemconvMigrationKind.DeprecatedButGenerated);
+    var supplementalCount = Count(entries, SemconvMigrationCatalog.IsSupplementalDiagnosticEntry);
+    var exactCount = Count(entries, entry => SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry)
+        && entry.MigrationKind is SemconvMigrationKind.ExactRename or SemconvMigrationKind.ExactValueRename);
+    var manualCount = Count(entries, entry => SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry)
+        && entry.MigrationKind is SemconvMigrationKind.ContextSensitive or SemconvMigrationKind.ManualReview);
+    var removedCount = Count(entries, entry => SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry)
+        && entry.MigrationKind == SemconvMigrationKind.RemovedNoReplacement);
+    var guidanceCount = Count(entries, entry => entry.Kind == SemconvMigrationItemKind.GuidanceOnly);
+
+    var sb = new StringBuilder();
+    sb.AppendLine("OpenTelemetry semantic-convention migration audit");
+    sb.AppendLine($"Curated changelog mentions: {entries.Length}");
+    sb.AppendLine($"Live [Obsolete] metadata rows: {metadataCount}");
+    sb.AppendLine($"Supplemental diagnostic rows: {supplementalCount}");
+    sb.AppendLine($"Exact supplemental replacements: {exactCount}");
+    sb.AppendLine($"Manual/context-sensitive supplemental rows: {manualCount}");
+    sb.AppendLine($"Removed/no-replacement supplemental rows: {removedCount}");
+    sb.AppendLine($"Guidance-only rows: {guidanceCount}");
+    sb.AppendLine($"Supplemental attribute-value fallback rows outside the 156 count: {valueEntries.Length}");
+    return sb.ToString();
+}
+
+static void AppendCompletionAudit(
+    StringBuilder sb,
+    ImmutableArray<SemconvMigrationCatalogEntry> entries,
+    ImmutableArray<SemconvMigrationCatalogEntry> valueEntries,
+    int metadataCount,
+    int supplementalCount,
+    int exactCount,
+    int manualCount,
+    int removedCount,
+    int guidanceCount)
+{
+    sb.AppendLine();
+    sb.AppendLine("## Completion Audit");
+    sb.AppendLine();
+    sb.AppendLine("This section is generated from the analyzer descriptors and migration catalog. It is intended to make the package-level completion claim reviewable without hand-counting the catalog.");
+    sb.AppendLine();
+    sb.AppendLine("| Requirement | Current generated evidence |");
+    sb.AppendLine("| -- | -- |");
+    sb.AppendLine($"| Preserve the 156 curated changelog-entry scope | `SemconvMigrationCatalog.Validate()` requires exactly `{SemconvMigrationCatalog.ExpectedCuratedMentionCount}` curated rows; current generated count is `{entries.Length}`. |");
+    sb.AppendLine($"| Prefer live `[Obsolete]` metadata where available | `{metadataCount}` of `{entries.Length}` curated rows are classified as `DeprecatedButGenerated`; `OTSC0010`, `OTSC0012`, and `OTSC0014` remain the live-metadata diagnostics. |");
+    sb.AppendLine($"| Use supplemental diagnostics only where metadata is insufficient | `{supplementalCount}` curated rows are supplemental diagnostics: `{exactCount}` exact replacement, `{manualCount}` manual/context-sensitive, `{removedCount}` removed/no-replacement, `{guidanceCount}` guidance-only. |");
+    sb.AppendLine($"| Keep attribute-value fallback separate from the curated name/key/event/metric count | `{valueEntries.Length}` supplemental attribute-value rows are outside the 156-entry inventory and are used only when live value metadata is absent. |");
+    sb.AppendLine("| Keep severity context-sensitive | `OTSC0030` is production exact replacement error, `OTSC0031` is production manual-review warning, and `OTSC0032` is compatibility/test/generated info. |");
+    sb.AppendLine("| Keep code fixes exact-only | `SupplementalSemconvMigrationCodeFixProvider` registers fixes only when diagnostic properties mark `ExactRename` or `ExactValueRename` and provide one replacement literal. |");
+    sb.AppendLine("| Keep old-schema compatibility non-error | Test, fixture, migration, compatibility, translator, generated, catalog, and explicit older schema URL contexts select `OTSC0032`. |");
+    sb.AppendLine();
+    sb.AppendLine("| Migration kind | Curated count |");
+    sb.AppendLine("| -- | --: |");
+    foreach (var group in entries
+        .GroupBy(entry => entry.MigrationKind)
+        .OrderBy(group => group.Key.ToString(), StringComparer.Ordinal))
+    {
+        sb.Append("| ");
+        sb.Append(group.Key);
+        sb.Append(" | ");
+        sb.Append(group.Count());
+        sb.AppendLine(" |");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("| Item kind | Curated count |");
+    sb.AppendLine("| -- | --: |");
+    foreach (var group in entries
+        .GroupBy(entry => entry.Kind)
+        .OrderBy(group => group.Key.ToString(), StringComparer.Ordinal))
+    {
+        sb.Append("| ");
+        sb.Append(group.Key);
+        sb.Append(" | ");
+        sb.Append(group.Count());
+        sb.AppendLine(" |");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("| Production surface | Analyzer coverage evidence |");
+    sb.AppendLine("| -- | -- |");
+    sb.AppendLine("| `Activity.SetTag` / `AddTag` and baggage-like calls | Shared payload detection covers known tag setters plus `SetBaggage`/`AddBaggage` for live metadata and supplemental catalog checks. |");
+    sb.AppendLine("| `TagList` / `ActivityTagsCollection` | `Add` payloads and `ActivityTagsCollection` indexer writes are recognized. |");
+    sb.AppendLine("| Inline and local attribute payload collections | Arrays, object/collection initializers, C# collection expressions, `KeyValuePair<string, object?>`, local dictionary initializers, and local mutable dictionary `Add`/indexer writes are recognized when they visibly flow to telemetry APIs. |");
+    sb.AppendLine("| Span/event/link/resource payloads | `ActivitySource.StartActivity(tags:)`, `ActivityEvent` tags, `ActivityLink` tags, and `ResourceBuilder.AddAttributes` are recognized. |");
+    sb.AppendLine("| Metric payloads and names | `Counter<T>.Add`, `Histogram<T>.Record`, `UpDownCounter<T>.Add`, `Measurement<T>` tags, and `Meter.CreateCounter/Histogram/Gauge/Observable*` names are recognized. |");
+    sb.AppendLine("| Logging payloads | Visible `ILogger.Log` state and `ILogger.BeginScope` state payloads are recognized when the key/value is statically visible. |");
 }
 
 static IReadOnlyList<DiagnosticDescriptor> GetDescriptors() =>
