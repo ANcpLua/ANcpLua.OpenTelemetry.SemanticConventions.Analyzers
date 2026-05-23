@@ -59,6 +59,9 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             ctx => AnalyzeObjectCreation(ctx, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues),
             OperationKind.ObjectCreation);
         context.RegisterOperationAction(
+            ctx => AnalyzeCollectionExpression(ctx, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues),
+            OperationKind.CollectionExpression);
+        context.RegisterOperationAction(
             ctx => AnalyzeAssignment(ctx, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues),
             OperationKind.SimpleAssignment);
     }
@@ -169,6 +172,28 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 liveObsoleteAttributeValues,
                 isProductionEmission: true);
         }
+    }
+
+    private static void AnalyzeCollectionExpression(
+        OperationAnalysisContext context,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues)
+    {
+        var collectionExpression = (ICollectionExpressionOperation)context.Operation;
+        if (SemconvIntentClassifier.IsCatalogSource(collectionExpression)
+            || !IsInsideLocalDeclarationInitializerUsedAsTelemetryPayload(collectionExpression))
+        {
+            return;
+        }
+
+        AnalyzeCollectionExpressionPayload(
+            context,
+            collectionExpression,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues,
+            isProductionEmission: true);
     }
 
     private static void AnalyzeTelemetryAttributePayloadInvocation(
@@ -483,6 +508,18 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        if (unwrapped is ICollectionExpressionOperation collectionExpression)
+        {
+            AnalyzeCollectionExpressionPayload(
+                context,
+                collectionExpression,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+            return;
+        }
+
         if (unwrapped is IObjectCreationOperation objectCreation)
         {
             if (IsKeyValuePairStringObject(objectCreation.Type))
@@ -568,6 +605,38 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             AnalyzeTelemetryAttributePayload(
                 context,
                 initializerOperation,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeCollectionExpressionPayload(
+        OperationAnalysisContext context,
+        ICollectionExpressionOperation collectionExpression,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        foreach (var element in collectionExpression.Elements)
+        {
+            if (element is ISpreadOperation spread)
+            {
+                AnalyzeTelemetryAttributePayload(
+                    context,
+                    spread.Operand,
+                    legacyMode,
+                    liveObsoleteAttributeNames,
+                    liveObsoleteAttributeValues,
+                    isProductionEmission);
+                continue;
+            }
+
+            AnalyzeTelemetryAttributePayload(
+                context,
+                element,
                 legacyMode,
                 liveObsoleteAttributeNames,
                 liveObsoleteAttributeValues,

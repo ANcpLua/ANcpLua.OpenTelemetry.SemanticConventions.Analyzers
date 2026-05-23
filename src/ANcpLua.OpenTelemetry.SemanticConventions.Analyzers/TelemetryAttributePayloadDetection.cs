@@ -89,6 +89,16 @@ internal static class TelemetryAttributePayloadDetection
         }
     }
 
+    public static void AnalyzeCollectionExpression(
+        ICollectionExpressionOperation collectionExpression,
+        Action<TelemetryAttributePayloadLiteral> report)
+    {
+        if (IsInsideLocalDeclarationInitializerUsedAsTelemetryPayload(collectionExpression))
+        {
+            AnalyzeCollectionExpressionElements(collectionExpression, report);
+        }
+    }
+
     public static void AnalyzeAssignment(
         ISimpleAssignmentOperation assignment,
         Action<TelemetryAttributePayloadLiteral> report)
@@ -118,6 +128,12 @@ internal static class TelemetryAttributePayloadDetection
         if (unwrapped is IArrayInitializerOperation arrayInitializer)
         {
             AnalyzeArrayInitializer(arrayInitializer, report);
+            return;
+        }
+
+        if (unwrapped is ICollectionExpressionOperation collectionExpression)
+        {
+            AnalyzeCollectionExpressionElements(collectionExpression, report);
             return;
         }
 
@@ -185,6 +201,22 @@ internal static class TelemetryAttributePayloadDetection
         foreach (var initializerOperation in initializer.Initializers)
         {
             AnalyzePayload(initializerOperation, report);
+        }
+    }
+
+    private static void AnalyzeCollectionExpressionElements(
+        ICollectionExpressionOperation collectionExpression,
+        Action<TelemetryAttributePayloadLiteral> report)
+    {
+        foreach (var element in collectionExpression.Elements)
+        {
+            if (element is ISpreadOperation spread)
+            {
+                AnalyzePayload(spread.Operand, report);
+                continue;
+            }
+
+            AnalyzePayload(element, report);
         }
     }
 

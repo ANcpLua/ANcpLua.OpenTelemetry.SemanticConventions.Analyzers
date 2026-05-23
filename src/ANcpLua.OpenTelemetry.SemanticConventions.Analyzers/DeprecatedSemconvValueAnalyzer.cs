@@ -48,6 +48,9 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
             ctx => AnalyzeObjectCreation(ctx, map),
             OperationKind.ObjectCreation);
         context.RegisterOperationAction(
+            ctx => AnalyzeCollectionExpression(ctx, map),
+            OperationKind.CollectionExpression);
+        context.RegisterOperationAction(
             ctx => AnalyzeAssignment(ctx, map),
             OperationKind.SimpleAssignment);
     }
@@ -166,6 +169,16 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
         var objectCreation = (IObjectCreationOperation)context.Operation;
         TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
             objectCreation,
+            payload => ReportIfDeprecated(context, map, payload));
+    }
+
+    private static void AnalyzeCollectionExpression(
+        OperationAnalysisContext context,
+        Dictionary<(string AttrName, string Value), string> map)
+    {
+        var collectionExpression = (ICollectionExpressionOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeCollectionExpression(
+            collectionExpression,
             payload => ReportIfDeprecated(context, map, payload));
     }
 

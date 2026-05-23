@@ -45,6 +45,7 @@ activity.SetBaggage("http.method", "GET");    // OTSC0012 in baggage-like key/va
 tagList.Add("http.method", "GET");            // OTSC0012 in TagList/ActivityTagsCollection payloads.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["http.method"] = "GET" }); // OTSC0012 from live metadata in payloads.
 activitySource.StartActivity("GET /users", tags: new[] { new KeyValuePair<string, object?>("http.method", "GET") }); // OTSC0012 in span-start tag payloads.
+activitySource.StartActivity("GET /users", tags: [new KeyValuePair<string, object?>("message.id", "42")]); // OTSC0031 in C# collection-expression payloads.
 var tags = new Dictionary<string, object?> { ["cloud.platform"] = "azure_aks" }; activitySource.StartActivity("GET /users", tags: tags); // OTSC0030 after local payload initializer expansion.
 tags.Add("cloud.platform", "azure_aks"); activitySource.StartActivity("GET /users", tags: tags); // OTSC0030 after mutable local payload flow is proven.
 new ActivityEvent("legacy.event", tags: new Dictionary<string, object?> { ["http.request.method"] = "_LEGACY_GET" }); // OTSC0014 from live value metadata.

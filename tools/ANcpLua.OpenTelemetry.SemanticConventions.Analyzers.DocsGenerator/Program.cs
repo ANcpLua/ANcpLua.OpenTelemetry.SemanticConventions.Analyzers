@@ -119,6 +119,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
     sb.AppendLine("activitySource.StartActivity(\"GET /users\", tags: new[] { new KeyValuePair<string, object?>(\"http.method\", \"GET\") }); // OTSC0012 in span-start tag payloads.");
+    sb.AppendLine("activitySource.StartActivity(\"GET /users\", tags: [new KeyValuePair<string, object?>(\"message.id\", \"42\")]); // OTSC0031 in C# collection-expression payloads.");
     sb.AppendLine("var tags = new Dictionary<string, object?> { [\"cloud.platform\"] = \"azure_aks\" }; activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after local payload initializer expansion.");
     sb.AppendLine("tags.Add(\"cloud.platform\", \"azure_aks\"); activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after mutable local payload flow is proven.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");

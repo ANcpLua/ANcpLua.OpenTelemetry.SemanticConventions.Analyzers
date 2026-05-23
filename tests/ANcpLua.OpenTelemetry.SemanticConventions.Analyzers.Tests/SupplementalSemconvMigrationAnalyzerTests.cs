@@ -678,6 +678,35 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
+    public async Task ActivitySource_StartActivity_Local_Collection_Expression_Tags_Report_Production_Manual_Review_Once()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    IEnumerable<KeyValuePair<string, object?>> tags =
+                    [
+                        new KeyValuePair<string, object?>({|#0:"message.id"|}, "42"),
+                    ];
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Metric_Names_Are_Recognized_On_Meter_Instruments()
     {
         const string testCode = FakeTelemetry + """
@@ -1048,6 +1077,44 @@ public class SupplementalSemconvMigrationAnalyzerTests
                     {
                         new KeyValuePair<string, object?>("cloud.platform", "azure.aks"),
                     });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Logger_BeginScope_Collection_Expression_Exact_Value_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ILogger logger)
+                {
+                    logger.BeginScope(
+                        [new KeyValuePair<string, object?>("cloud.platform", {|#0:"azure_aks"|})]);
+                }
+            }
+            """;
+
+        const string fixedCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(ILogger logger)
+                {
+                    logger.BeginScope(
+                        [new KeyValuePair<string, object?>("cloud.platform", "azure.aks")]);
                 }
             }
             """;
