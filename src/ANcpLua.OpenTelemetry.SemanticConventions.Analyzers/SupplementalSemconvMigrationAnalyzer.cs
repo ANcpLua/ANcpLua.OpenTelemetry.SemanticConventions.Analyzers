@@ -539,7 +539,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         bool isProductionEmission)
     {
         var compatibilityContext = SemconvIntentClassifier.IsCompatibilityOrTestContext(context)
-            || SemconvIntentClassifier.IsGeneratedSource(context.Operation);
+            || SemconvIntentClassifier.IsGeneratedSource(context.Operation)
+            || SemconvIntentClassifier.HasLegacySchemaUrlContext(context.Operation);
 
         var descriptor = SelectDescriptor(entry, legacyMode, compatibilityContext, isProductionEmission);
         var replacement = entry.ReplacementNames.Length == 1 ? entry.ReplacementNames[0] : "";
