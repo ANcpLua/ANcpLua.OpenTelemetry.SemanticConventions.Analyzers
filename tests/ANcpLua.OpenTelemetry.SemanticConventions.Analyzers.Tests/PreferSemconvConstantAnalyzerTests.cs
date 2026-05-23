@@ -11,6 +11,8 @@ namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
 public class PreferSemconvConstantAnalyzerTests
 {
     private const string SemconvFixture = """
+        using System.Collections.Generic;
+
         namespace OpenTelemetry.SemanticConventions.Attributes
         {
             public static class HttpAttributes
@@ -29,6 +31,22 @@ public class PreferSemconvConstantAnalyzerTests
         public class FakeSpan
         {
             public FakeSpan SetTag(string key, object? value) => this;
+            public FakeSpan SetBaggage(string key, string? value) => this;
+        }
+
+        public sealed class TagList
+        {
+            public void Add(string key, object? value) { }
+        }
+
+        public sealed class ResourceBuilder
+        {
+            public ResourceBuilder AddAttributes(IEnumerable<KeyValuePair<string, object?>> attributes) => this;
+        }
+
+        public readonly struct ActivityEvent
+        {
+            public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
         """;
 
@@ -128,6 +146,114 @@ public class PreferSemconvConstantAnalyzerTests
         {
             TestCode = testCode,
             ExpectedDiagnostics = { addr, port, code },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task SetBaggage_Hardcoded_Key_Reports_OTSC0011()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(FakeSpan activity)
+                {
+                    activity.SetBaggage({|#0:"http.request.method"|}, "GET");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("http.request.method", "HttpAttributes.AttributeHttpRequestMethod");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task TagList_Add_Hardcoded_Key_Reports_OTSC0011()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(TagList tags)
+                {
+                    tags.Add({|#0:"server.address"|}, "localhost");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ResourceBuilder_AddAttributes_Hardcoded_Key_Reports_OTSC0011()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(ResourceBuilder resourceBuilder)
+                {
+                    resourceBuilder.AddAttributes(new Dictionary<string, object?>
+                    {
+                        [{|#0:"server.address"|}] = "localhost",
+                    });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityEvent_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                ActivityEvent Create()
+                {
+                    return new ActivityEvent(
+                        "cache.prune",
+                        tags: new Dictionary<string, object?>
+                        {
+                            { {|#0:"server.address"|}, "localhost" },
+                        });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 

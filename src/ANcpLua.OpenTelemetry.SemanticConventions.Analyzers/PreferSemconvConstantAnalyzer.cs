@@ -4,15 +4,14 @@
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0011: When a string literal passed to <c>SetTag/AddTag/SetAttribute</c>
-/// matches a known <c>const string</c> field exposed by
+/// OTSC0011: When a string literal used as a telemetry attribute key matches a
+/// known <c>const string</c> field exposed by
 /// <c>OpenTelemetry.SemanticConventions.Attributes.*</c>, suggest the typed constant.
 /// </summary>
 /// <remarks>
 /// The catalog is built at compilation-start by walking the consumer's referenced
-/// SemConv assembly via <see cref="Compilation.GetTypeByMetadataName"/>. If the
-/// consumer doesn't reference <c>OpenTelemetry.SemanticConventions</c>, the analyzer
-/// is a silent no-op.
+/// SemConv assembly. If the consumer doesn't reference
+/// <c>OpenTelemetry.SemanticConventions</c>, the analyzer is a silent no-op.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
@@ -43,6 +42,9 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeInvocation(ctx, catalog),
             OperationKind.Invocation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeObjectCreation(ctx, catalog),
+            OperationKind.ObjectCreation);
     }
 
     private static Dictionary<string, string> BuildCatalog(Compilation compilation)
@@ -109,29 +111,33 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     {
         var invocation = (IInvocationOperation)context.Operation;
 
-        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
-            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArg))
-        {
-            return;
-        }
+        TelemetryAttributePayloadDetection.AnalyzeInvocation(
+            invocation,
+            payload => ReportIfKnownConstant(context, catalog, payload));
+    }
 
-        var keyArgValue = TagSetterDetection.UnwrapConversion(keyArg.Value);
+    private static void AnalyzeObjectCreation(
+        OperationAnalysisContext context,
+        Dictionary<string, string> catalog)
+    {
+        var objectCreation = (IObjectCreationOperation)context.Operation;
 
+        TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
+            objectCreation,
+            payload => ReportIfKnownConstant(context, catalog, payload));
+    }
+
+    private static void ReportIfKnownConstant(
+        OperationAnalysisContext context,
+        Dictionary<string, string> catalog,
+        TelemetryAttributePayloadLiteral payload)
+    {
         // Only flag bare string literals. Symbol references (typed SemConv constants,
         // user-defined locals/consts, members) are out of scope: if the user already
         // wrote a named symbol, even one whose value matches the catalog, we should
-        // not nag — the symbol may be intentional or carry meaning beyond the value.
-        if (keyArgValue.Syntax is not LiteralExpressionSyntax)
-        {
-            return;
-        }
-
-        if (!TagSetterDetection.TryGetNonEmptyStringConstant(keyArgValue, out var literal))
-        {
-            return;
-        }
-
-        if (!catalog.TryGetValue(literal, out var suggestedConstant))
+        // not nag; the symbol may be intentional or carry meaning beyond the value.
+        if (!payload.KeyIsBareLiteral
+            || !catalog.TryGetValue(payload.Key, out var suggestedConstant))
         {
             return;
         }
@@ -141,10 +147,9 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.PreferSemconvConstant,
-            keyArg.Syntax.GetLocation(),
+            payload.KeySyntax.GetLocation(),
             properties,
-            literal,
+            payload.Key,
             suggestedConstant));
     }
-
 }
