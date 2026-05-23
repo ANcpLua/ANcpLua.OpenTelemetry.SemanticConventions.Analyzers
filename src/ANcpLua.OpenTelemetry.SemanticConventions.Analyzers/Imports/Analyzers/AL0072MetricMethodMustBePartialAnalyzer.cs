@@ -25,7 +25,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0072MetricMethodMustBePartialAnalyzer : AlAnalyzer {
+public sealed class Al0072MetricMethodMustBePartialAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0072.</summary>
     public const string DiagnosticId = "AL0072";
 

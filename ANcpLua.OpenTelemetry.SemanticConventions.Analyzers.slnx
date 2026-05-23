@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/Consumer/Consumer.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator.csproj" />
+  </Folder>
+</Solution>

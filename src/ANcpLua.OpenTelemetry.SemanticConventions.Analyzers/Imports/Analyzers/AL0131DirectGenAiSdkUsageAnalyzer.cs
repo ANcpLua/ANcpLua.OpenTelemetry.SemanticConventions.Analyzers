@@ -19,7 +19,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     — bypass this pipeline and emit no telemetry.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0131DirectGenAiSdkUsageAnalyzer : AlAnalyzer {
+public sealed class Al0131DirectGenAiSdkUsageAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0131.</summary>
     private const string DiagnosticId = "AL0131";
 

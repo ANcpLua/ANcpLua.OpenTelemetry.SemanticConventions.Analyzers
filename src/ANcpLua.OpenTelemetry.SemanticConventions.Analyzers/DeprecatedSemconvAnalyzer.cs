@@ -1,13 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -25,7 +18,7 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.DeprecatedSemconvConstant);
+        [DiagnosticDescriptors.DeprecatedSemconvConstant];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

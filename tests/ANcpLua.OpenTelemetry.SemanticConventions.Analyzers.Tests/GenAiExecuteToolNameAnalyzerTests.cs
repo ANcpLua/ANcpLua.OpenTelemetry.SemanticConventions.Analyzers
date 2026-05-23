@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
@@ -31,7 +32,7 @@ public class GenAiExecuteToolNameAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0001", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GenAiExecuteToolNameAnalyzer, DefaultVerifier>

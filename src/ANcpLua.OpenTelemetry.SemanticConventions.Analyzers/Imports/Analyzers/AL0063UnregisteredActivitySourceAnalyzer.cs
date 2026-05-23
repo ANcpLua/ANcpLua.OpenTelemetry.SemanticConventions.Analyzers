@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace ANcpLua.Analyzers.Analyzers;
 
 /// <summary>
@@ -17,7 +15,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0063UnregisteredActivitySourceAnalyzer : AlAnalyzer {
+public sealed class Al0063UnregisteredActivitySourceAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0063.</summary>
     private const string DiagnosticId = "AL0063";
 

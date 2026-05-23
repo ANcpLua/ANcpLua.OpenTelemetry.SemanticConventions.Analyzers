@@ -22,7 +22,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0083InsecureEndpointAnalyzer : AlAnalyzer {
+public sealed class Al0083InsecureEndpointAnalyzer : AlAnalyzer {
     private const string HttpPrefix = "http://";
     private const string HttpsPrefix = "https://";
 

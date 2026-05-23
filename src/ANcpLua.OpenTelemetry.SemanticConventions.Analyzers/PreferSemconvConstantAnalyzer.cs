@@ -1,13 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -29,7 +22,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.PreferSemconvConstant);
+        [DiagnosticDescriptors.PreferSemconvConstant];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -54,7 +47,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
     private static Dictionary<string, string> BuildCatalog(Compilation compilation)
     {
-        var catalog = new Dictionary<string, string>(System.StringComparer.Ordinal);
+        var catalog = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // Walk every assembly-defined namespace. Collect public const string fields
         // from any "*Attributes" type whose namespace is or descends from
@@ -71,7 +64,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     {
         foreach (var type in ns.GetTypeMembers())
         {
-            if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
+            if (!type.Name.EndsWith("Attributes", StringComparison.Ordinal))
             {
                 continue;
             }
@@ -83,22 +76,24 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
             foreach (var member in type.GetMembers())
             {
-                if (member is not IFieldSymbol field
-                    || !field.IsConst
+                if (member is not IFieldSymbol { IsConst: true } field
                     || field.Type.SpecialType != SpecialType.System_String
                     || field.DeclaredAccessibility != Accessibility.Public)
                 {
                     continue;
                 }
 
-                if (field.ConstantValue is string value && !string.IsNullOrEmpty(value))
+                if (field.ConstantValue is not string value || string.IsNullOrEmpty(value))
                 {
-                    var qualified = $"{type.Name}.{field.Name}";
-                    if (!catalog.ContainsKey(value))
-                    {
-                        catalog.Add(value, qualified);
-                    }
+                    continue;
                 }
+
+                if (catalog.ContainsKey(value))
+                {
+                    continue;
+                }
+
+                catalog.Add(value, $"{type.Name}.{field.Name}");
             }
         }
 
@@ -114,18 +109,12 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
     {
         var invocation = (IInvocationOperation)context.Operation;
 
-        if (!TagSetterDetection.TagSetterMethodNames.Contains(invocation.TargetMethod.Name))
+        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
+            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArg))
         {
             return;
         }
 
-        var keyArgIndex = invocation.TargetMethod.IsExtensionMethod ? 1 : 0;
-        if (invocation.Arguments.Length <= keyArgIndex)
-        {
-            return;
-        }
-
-        var keyArg = invocation.Arguments[keyArgIndex];
         var keyArgValue = TagSetterDetection.UnwrapConversion(keyArg.Value);
 
         // Only flag bare string literals. Symbol references (typed SemConv constants,
@@ -137,8 +126,7 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (keyArgValue.ConstantValue is not { HasValue: true, Value: string literal }
-            || string.IsNullOrEmpty(literal))
+        if (!TagSetterDetection.TryGetNonEmptyStringConstant(keyArgValue, out var literal))
         {
             return;
         }

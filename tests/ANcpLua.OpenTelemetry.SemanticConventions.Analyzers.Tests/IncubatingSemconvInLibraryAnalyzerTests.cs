@@ -39,7 +39,7 @@ public class IncubatingSemconvInLibraryAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0021", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0021", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("OpenTelemetry.SemanticConventions.Incubating.GenAiAttributes.AttributeGenAiPrompt");
 

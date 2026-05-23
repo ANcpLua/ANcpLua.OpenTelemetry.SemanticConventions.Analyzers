@@ -27,7 +27,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0076MissingOTelConfigurationAnalyzer : AlAnalyzer {
+public sealed class Al0076MissingOTelConfigurationAnalyzer : AlAnalyzer {
     private static readonly string[] s_serviceDefaultsMethods = [
         "AddServiceDefaults",
         "AddQylServiceDefaults",

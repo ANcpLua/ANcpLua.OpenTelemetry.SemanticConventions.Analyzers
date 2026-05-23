@@ -28,7 +28,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.0" />
+    <PackageReference Include="ANcpLua.Roslyn.Utilities" Version="2.2.9" PrivateAssets="all" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <!-- Direct analyzer project references do not copy analyzer dependencies into
+       csc's analyzer load context; include the utility DLL beside the analyzer. -->
+  <ItemGroup>
+    <Analyzer Include="$(PkgANcpLua_Roslyn_Utilities)\lib\netstandard2.0\ANcpLua.Roslyn.Utilities.dll" />
   </ItemGroup>
 
 </Project>

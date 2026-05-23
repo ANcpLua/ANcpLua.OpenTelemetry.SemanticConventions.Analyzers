@@ -1,11 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -21,7 +16,7 @@ public sealed class GraphqlDocumentOptInAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.GraphqlDocumentIsOptIn);
+        [DiagnosticDescriptors.GraphqlDocumentIsOptIn];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -35,30 +30,16 @@ public sealed class GraphqlDocumentOptInAnalyzer : DiagnosticAnalyzer
     {
         var invocation = (IInvocationOperation)context.Operation;
 
-        if (!TagSetterDetection.TagSetterMethodNames.Contains(invocation.TargetMethod.Name))
-        {
-            return;
-        }
-
-        var keyArgIndex = invocation.TargetMethod.IsExtensionMethod ? 1 : 0;
-        if (invocation.Arguments.Length <= keyArgIndex)
-        {
-            return;
-        }
-
-        var keyArg = TagSetterDetection.UnwrapConversion(invocation.Arguments[keyArgIndex].Value);
-        if (keyArg.ConstantValue is not { HasValue: true, Value: string key })
-        {
-            return;
-        }
-
-        if (!string.Equals(key, GraphqlDocumentKey, System.StringComparison.Ordinal))
+        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
+            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArgument)
+            || !TagSetterDetection.TryGetStringConstant(keyArgument.Value, out var key)
+            || !string.Equals(key, GraphqlDocumentKey, StringComparison.Ordinal))
         {
             return;
         }
 
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.GraphqlDocumentIsOptIn,
-            invocation.Arguments[keyArgIndex].Syntax.GetLocation()));
+            keyArgument.Syntax.GetLocation()));
     }
 }

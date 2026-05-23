@@ -1,12 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -32,7 +26,7 @@ public sealed class RpcServerClientAttributeAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.RpcServerHasClientAddressAttribute);
+        [DiagnosticDescriptors.RpcServerHasClientAddressAttribute];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -55,17 +49,7 @@ public sealed class RpcServerClientAttributeAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var inRpcServerContext = false;
-        foreach (var call in calls)
-        {
-            if (RpcContextKeys.Contains(call.Key))
-            {
-                inRpcServerContext = true;
-                break;
-            }
-        }
-
-        if (!inRpcServerContext)
+        if (!calls.Exists(static call => RpcContextKeys.Contains(call.Key)))
         {
             return;
         }

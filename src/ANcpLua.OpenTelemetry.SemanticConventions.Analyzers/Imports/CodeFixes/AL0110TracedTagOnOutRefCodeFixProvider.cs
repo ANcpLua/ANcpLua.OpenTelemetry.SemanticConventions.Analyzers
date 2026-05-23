@@ -7,7 +7,7 @@ namespace ANcpLua.Analyzers.CodeFixes.CodeFixes;
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(Al0110TracedTagOnOutRefCodeFixProvider))]
 [Shared]
-public sealed partial class Al0110TracedTagOnOutRefCodeFixProvider : CodeFixProvider {
+public sealed class Al0110TracedTagOnOutRefCodeFixProvider : CodeFixProvider {
     /// <summary>Gets the diagnostic IDs this provider can fix.</summary>
     public override ImmutableArray<string> FixableDiagnosticIds => [Al0110TracedTagOnOutRefParameterAnalyzer.DiagnosticId];
 

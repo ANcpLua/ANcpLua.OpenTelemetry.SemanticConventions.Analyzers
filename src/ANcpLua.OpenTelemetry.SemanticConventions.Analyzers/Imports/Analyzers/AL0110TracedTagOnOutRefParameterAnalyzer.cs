@@ -26,7 +26,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0110TracedTagOnOutRefParameterAnalyzer : AlAnalyzer {
+public sealed class Al0110TracedTagOnOutRefParameterAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0110.</summary>
     public const string DiagnosticId = "AL0110";
 

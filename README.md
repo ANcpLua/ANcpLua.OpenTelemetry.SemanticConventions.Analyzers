@@ -6,18 +6,32 @@ This is the **incubation home** for what may eventually be proposed as an offici
 
 ## Diagnostics
 
+The package-level generated catalog is in
+[`docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md).
+
 | ID | Severity | Description |
 |---|---|---|
-| `OTSC0010` | Warning | Use of `[Obsolete]` semantic-convention constant from `OpenTelemetry.SemanticConventions.Attributes.*` |
+| `OTSC0001` | Warning | `gen_ai.execute_tool` span requires `gen_ai.tool.name` for v1.41.0 span naming |
+| `OTSC0002` | Info | `graphql.document` is opt-in because it may carry sensitive/high-cardinality user input |
 | `OTSC0005` | Warning | RPC server span sets `client.address`/`client.port` (removed from RPC server in v1.41.0) |
-
-More rules planned: see `AnalyzerReleases.Unshipped.md`.
+| `OTSC0010` | Warning | Direct typed reference to a semantic-convention constant marked `[Obsolete]` |
+| `OTSC0011` | Info | Hard-coded key matches a typed semantic-convention constant |
+| `OTSC0012` | Warning | Hard-coded key matches a semantic-convention constant marked `[Obsolete]` |
+| `OTSC0014` | Warning | Hard-coded value matches a semantic-convention value constant marked `[Obsolete]` |
+| `OTSC0021` | Warning | Library directly references incubating semantic-convention members |
+| `OTSC0030` | Error | Supplemental catalog exact replacement in production telemetry emission |
+| `OTSC0031` | Warning | Supplemental catalog context-sensitive, manual-review, removed/no-replacement, or ambiguous payload migration |
+| `OTSC0032` | Info | Supplemental catalog item appears in test, fixture, compatibility, generated, translator, or catalog context |
 
 ## Design
 
-- **No catalog generation.** Diagnostics resolve attribute metadata from the consumer's referenced `OpenTelemetry.SemanticConventions` assembly via Roslyn's symbol model. The package's existing `[Obsolete]` markers are the source of truth — no parallel deprecation table to maintain.
+- **Live metadata first.** `OTSC0010`, `OTSC0012`, and `OTSC0014` resolve `[Obsolete]` metadata from the consumer's referenced `OpenTelemetry.SemanticConventions` assembly via Roslyn's symbol model. The referenced package remains the primary source of truth.
+- **Supplemental catalog only where metadata is insufficient.** `OTSC0030`-`OTSC0032` cover changelog/model entries that are not reliably visible through generated `[Obsolete]` constants, including metric names, removed events, context-sensitive migrations, attribute values, and compatibility payloads.
+- **Context-sensitive severity.** Production telemetry emission can be an error only when the supplemental catalog has an exact one-to-one replacement. Tests, fixtures, migration maps, schema translators, generated code, and compatibility shims downgrade to info. Ambiguous dictionaries and no-direct-replacement items stay warning/manual-review.
+- **Configurable legacy mode.** Set `build_property.OtelSemConvLegacyMode` to `production` (default), `compatibility`, or `off`. `off` disables only supplemental catalog diagnostics; live `[Obsolete]` metadata rules remain enabled.
+- **Generated docs.** Regenerate the package catalog with `scripts/generate-docs.sh generate`; validate with `scripts/generate-docs.sh validate`.
 - **netstandard2.0** only — required by Roslyn analyzer host. Microsoft.CodeAnalysis.* dependencies only.
-- **Multi-version friendly.** A consumer on SemConv 1.39.0 gets diagnostics scoped to the 1.39.0 surface; upgrading to 1.41.0 expands the catalog automatically.
+- **Multi-version friendly.** A consumer on SemConv 1.39.0 gets live metadata diagnostics scoped to the 1.39.0 surface; upgrading expands those diagnostics automatically. The supplemental catalog is a conservative v1.41.0 migration aid.
 
 ## Status
 
