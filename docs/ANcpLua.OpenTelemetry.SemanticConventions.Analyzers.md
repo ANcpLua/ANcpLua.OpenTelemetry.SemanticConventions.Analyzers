@@ -44,6 +44,7 @@ activity.SetTag("http.method", "GET");        // OTSC0012 when the referenced Se
 activity.SetBaggage("http.method", "GET");    // OTSC0012 in baggage-like key/value APIs.
 tagList.Add("http.method", "GET");            // OTSC0012 in TagList/ActivityTagsCollection payloads.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["http.method"] = "GET" }); // OTSC0012 from live metadata in payloads.
+activitySource.StartActivity("GET /users", tags: new[] { new KeyValuePair<string, object?>("http.method", "GET") }); // OTSC0012 in span-start tag payloads.
 new ActivityEvent("legacy.event", tags: new Dictionary<string, object?> { ["http.request.method"] = "_LEGACY_GET" }); // OTSC0014 from live value metadata.
 counter.Add(1, new KeyValuePair<string, object?>("http.method", "GET")); // OTSC0012 in metric instrument tag payloads.
 histogram.Record(1, new KeyValuePair<string, object?>("cloud.platform", "azure_aks")); // OTSC0030 supplemental value fallback in metric tag payloads.

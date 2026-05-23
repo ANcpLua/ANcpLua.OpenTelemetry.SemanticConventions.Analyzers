@@ -34,6 +34,11 @@ public class PreferSemconvConstantAnalyzerTests
             public FakeSpan SetBaggage(string key, string? value) => this;
         }
 
+        public sealed class ActivitySource
+        {
+            public FakeSpan? StartActivity(string name, object? kind = null, object? parent = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) => null;
+        }
+
         public sealed class TagList
         {
             public void Add(string key, object? value) { }
@@ -251,6 +256,36 @@ public class PreferSemconvConstantAnalyzerTests
                         tags: new Dictionary<string, object?>
                         {
                             { {|#0:"server.address"|}, "localhost" },
+                        });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivitySource_StartActivity_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(ActivitySource source)
+                {
+                    source.StartActivity(
+                        "GET /users",
+                        tags: new[]
+                        {
+                            new KeyValuePair<string, object?>({|#0:"server.address"|}, "localhost"),
                         });
                 }
             }

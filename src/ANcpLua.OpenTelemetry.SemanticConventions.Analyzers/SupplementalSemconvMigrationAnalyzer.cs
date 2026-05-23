@@ -161,6 +161,19 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         ImmutableHashSet<string> liveObsoleteAttributeNames,
         ImmutableHashSet<string> liveObsoleteAttributeValues)
     {
+        if (IsActivitySourceStartActivity(invocation)
+            && TryGetArgumentByNameOrOrdinal(invocation.Arguments, "tags", 3, out var startActivityTagsArgument))
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                startActivityTagsArgument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+            return;
+        }
+
         if (!IsResourceBuilderAddAttributes(invocation)
             || !TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
         {
@@ -720,6 +733,10 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
 
+    private static bool IsActivitySourceStartActivity(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "StartActivity"
+        && IsActivitySourceLike(invocation.TargetMethod.ContainingType);
+
     private static bool IsMetricMeasurementCreation(ITypeSymbol? type) =>
         type?.Name is "Measurement";
 
@@ -771,6 +788,12 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 return true;
             }
 
+            if (argument.Parent is IInvocationOperation startActivityInvocation
+                && IsActivitySourceTagsArgument(startActivityInvocation, argument))
+            {
+                return true;
+            }
+
             if (argument.Parent is IObjectCreationOperation objectCreation
                 && IsActivityEventTagsArgument(objectCreation, argument))
             {
@@ -787,6 +810,13 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         IsActivityEventCreation(objectCreation.Type)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 2);
+
+    private static bool IsActivitySourceTagsArgument(
+        IInvocationOperation invocation,
+        IArgumentOperation argument) =>
+        IsActivitySourceStartActivity(invocation)
+        && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
+            || argument.Parameter?.Ordinal == 3);
 
     private static bool TryGetAttributeValueMigration(
         string key,

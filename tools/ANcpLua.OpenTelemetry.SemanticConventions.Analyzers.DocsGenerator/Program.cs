@@ -118,6 +118,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("activity.SetBaggage(\"http.method\", \"GET\");    // OTSC0012 in baggage-like key/value APIs.");
     sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
+    sb.AppendLine("activitySource.StartActivity(\"GET /users\", tags: new[] { new KeyValuePair<string, object?>(\"http.method\", \"GET\") }); // OTSC0012 in span-start tag payloads.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
     sb.AppendLine("counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // OTSC0012 in metric instrument tag payloads.");
     sb.AppendLine("histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // OTSC0030 supplemental value fallback in metric tag payloads.");
