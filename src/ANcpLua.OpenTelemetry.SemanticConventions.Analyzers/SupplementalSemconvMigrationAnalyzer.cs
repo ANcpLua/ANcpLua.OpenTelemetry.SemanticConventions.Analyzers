@@ -322,7 +322,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     {
         var assignment = (ISimpleAssignmentOperation)context.Operation;
         if (SemconvIntentClassifier.IsCatalogSource(assignment)
-            || !IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment))
+            || (!IsTelemetryTagCollectionIndexerAssignment(assignment)
+                && !IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment)))
         {
             return;
         }
@@ -1050,6 +1051,13 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             && IsStringKeyDictionary(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType)
             && TryGetLocalReference(propertyReference.Instance, out var local)
             && LocalFlowsToKnownTelemetryAttributePayload(local, assignment);
+    }
+
+    private static bool IsTelemetryTagCollectionIndexerAssignment(ISimpleAssignmentOperation assignment)
+    {
+        var target = TagSetterDetection.UnwrapConversion(assignment.Target);
+        return target is IPropertyReferenceOperation propertyReference
+            && IsTelemetryTagCollection(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType);
     }
 
     private static bool TryGetLocalReference(

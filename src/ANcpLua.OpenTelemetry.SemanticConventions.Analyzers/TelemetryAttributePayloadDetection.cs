@@ -109,7 +109,8 @@ internal static class TelemetryAttributePayloadDetection
         ISimpleAssignmentOperation assignment,
         Action<TelemetryAttributePayloadLiteral> report)
     {
-        if (IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment))
+        if (IsTelemetryTagCollectionIndexerAssignment(assignment)
+            || IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment))
         {
             AnalyzeIndexerAssignment(assignment, report);
         }
@@ -585,6 +586,13 @@ internal static class TelemetryAttributePayloadDetection
             && IsStringKeyDictionary(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType)
             && TryGetLocalReference(propertyReference.Instance, out var local)
             && LocalFlowsToKnownTelemetryAttributePayload(local, assignment);
+    }
+
+    private static bool IsTelemetryTagCollectionIndexerAssignment(ISimpleAssignmentOperation assignment)
+    {
+        var target = TagSetterDetection.UnwrapConversion(assignment.Target);
+        return target is IPropertyReferenceOperation propertyReference
+            && IsTelemetryTagCollection(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType);
     }
 
     private static bool TryGetLocalReference(

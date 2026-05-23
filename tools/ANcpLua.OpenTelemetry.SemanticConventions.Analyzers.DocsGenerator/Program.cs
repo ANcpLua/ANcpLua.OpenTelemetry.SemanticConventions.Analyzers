@@ -117,6 +117,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("activity.SetTag(\"http.method\", \"GET\");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].");
     sb.AppendLine("activity.SetBaggage(\"http.method\", \"GET\");    // OTSC0012 in baggage-like key/value APIs.");
     sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
+    sb.AppendLine("activityTags[\"message.id\"] = \"42\";            // OTSC0031 in ActivityTagsCollection indexer payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
     sb.AppendLine("activitySource.StartActivity(\"GET /users\", tags: new[] { new KeyValuePair<string, object?>(\"http.method\", \"GET\") }); // OTSC0012 in span-start tag payloads.");
     sb.AppendLine("activitySource.StartActivity(\"GET /users\", tags: [new KeyValuePair<string, object?>(\"message.id\", \"42\")]); // OTSC0031 in C# collection-expression payloads.");
