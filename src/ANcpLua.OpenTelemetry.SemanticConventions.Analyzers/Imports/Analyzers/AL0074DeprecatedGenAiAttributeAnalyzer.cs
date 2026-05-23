@@ -22,7 +22,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0074DeprecatedGenAiAttributeAnalyzer : AlAnalyzer {
+public sealed class Al0074DeprecatedGenAiAttributeAnalyzer : AlAnalyzer {
     /// <summary>
     ///     Mapping of deprecated GenAI attribute names to their replacements.
     /// </summary>

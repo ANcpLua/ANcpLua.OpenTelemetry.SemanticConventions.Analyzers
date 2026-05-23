@@ -16,7 +16,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     mislead developers into thinking agent spans are being created.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0124NonInterceptableAgentTracedAnalyzer : AlAnalyzer {
+public sealed class Al0124NonInterceptableAgentTracedAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0124.</summary>
     public const string DiagnosticId = "AL0124";
 

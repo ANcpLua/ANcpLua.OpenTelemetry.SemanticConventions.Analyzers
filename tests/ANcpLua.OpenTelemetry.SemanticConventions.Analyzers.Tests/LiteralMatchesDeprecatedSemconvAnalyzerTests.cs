@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
@@ -42,7 +43,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 

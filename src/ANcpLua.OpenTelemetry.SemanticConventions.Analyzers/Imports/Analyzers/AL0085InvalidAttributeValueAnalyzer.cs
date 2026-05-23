@@ -143,7 +143,7 @@ public sealed partial class Al0085InvalidAttributeValueAnalyzer : AlAnalyzer {
         || value.EqualsIgnoreCase("wss");
 
     /// <summary>Encapsulates validation logic and expected format message.</summary>
-    private sealed partial class AttributeValidator(Func<string, bool> validate, string expectedFormat) {
+    private sealed class AttributeValidator(Func<string, bool> validate, string expectedFormat) {
         public string ExpectedFormat { get; } = expectedFormat;
 
         public bool Validate(string value) => validate(value);

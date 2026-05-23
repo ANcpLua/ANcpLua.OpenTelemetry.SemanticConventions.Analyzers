@@ -1,8 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using Microsoft.CodeAnalysis;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 internal static class DiagnosticDescriptors
@@ -89,4 +87,34 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Members under any *.SemanticConventions.Incubating namespace may rename or change values across minor package releases. Library projects (non-exe, non-test) baking direct references push that volatility onto every downstream consumer.",
         helpLinkUri: HelpLinkBase + "OTSC0021.md");
+
+    public static readonly DiagnosticDescriptor SupplementalExactSemconvMigration = new(
+        id: "OTSC0030",
+        title: "Obsolete semantic convention has an exact replacement",
+        messageFormat: "Semantic convention '{0}' is obsolete in production telemetry emission; use '{1}' ({2})",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog and has a one-to-one replacement. This supplements, but does not replace, [Obsolete] metadata from OpenTelemetry.SemanticConventions.",
+        helpLinkUri: HelpLinkBase + "OTSC0030.md");
+
+    public static readonly DiagnosticDescriptor SupplementalManualSemconvMigration = new(
+        id: "OTSC0031",
+        title: "Semantic convention migration needs review",
+        messageFormat: "Semantic convention '{0}' needs semantic-convention migration review: {1}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement.",
+        helpLinkUri: HelpLinkBase + "OTSC0031.md");
+
+    public static readonly DiagnosticDescriptor SupplementalCompatibilitySemconvMigration = new(
+        id: "OTSC0032",
+        title: "Legacy semantic convention appears in compatibility or test code",
+        messageFormat: "Semantic convention '{0}' is legacy compatibility/test/migration data: {1}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled.",
+        helpLinkUri: HelpLinkBase + "OTSC0032.md");
 }

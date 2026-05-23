@@ -1,13 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -30,7 +23,7 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.DeprecatedSemconvValue);
+        [DiagnosticDescriptors.DeprecatedSemconvValue];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -73,14 +66,14 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
             Dictionary<string, string>? attrConstNameToValue = null;
             foreach (var member in type.GetMembers())
             {
-                if (member is IFieldSymbol field
-                    && field.IsConst
-                    && field.Type.SpecialType == SpecialType.System_String
-                    && field.ConstantValue is string attrName)
+                if (member is not IFieldSymbol { IsConst: true, Type.SpecialType: SpecialType.System_String, ConstantValue: string attrName } field
+                    || string.IsNullOrEmpty(attrName))
                 {
-                    attrConstNameToValue ??= new Dictionary<string, string>(System.StringComparer.Ordinal);
-                    attrConstNameToValue[field.Name] = attrName;
+                    continue;
                 }
+
+                attrConstNameToValue ??= new Dictionary<string, string>(StringComparer.Ordinal);
+                attrConstNameToValue[field.Name] = attrName;
             }
 
             if (attrConstNameToValue is null)
@@ -90,7 +83,7 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
 
             foreach (var nested in type.GetTypeMembers())
             {
-                if (!nested.Name.EndsWith(ValuesSuffix, System.StringComparison.Ordinal))
+                if (!nested.Name.EndsWith(ValuesSuffix, StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -104,8 +97,7 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
 
                 foreach (var nestedMember in nested.GetMembers())
                 {
-                    if (nestedMember is not IFieldSymbol valueField
-                        || !valueField.IsConst
+                    if (nestedMember is not IFieldSymbol { IsConst: true } valueField
                         || valueField.Type.SpecialType != SpecialType.System_String
                         || valueField.ConstantValue is not string value)
                     {
@@ -157,24 +149,22 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
     {
         var invocation = (IInvocationOperation)context.Operation;
 
-        if (!TagSetterDetection.TagSetterMethodNames.Contains(invocation.TargetMethod.Name))
+        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
+            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArgument)
+            || !TagSetterDetection.TryGetTagSetterValueArgument(invocation, out var valueArgument))
         {
             return;
         }
 
-        var keyArgIndex = invocation.TargetMethod.IsExtensionMethod ? 1 : 0;
-        var valueArgIndex = keyArgIndex + 1;
-
-        if (invocation.Arguments.Length <= valueArgIndex)
+        if (!TagSetterDetection.TryGetStringConstant(keyArgument.Value, out var attrName))
         {
             return;
         }
 
-        var keyOp = TagSetterDetection.UnwrapConversion(invocation.Arguments[keyArgIndex].Value);
-        var valueOp = TagSetterDetection.UnwrapConversion(invocation.Arguments[valueArgIndex].Value);
-
-        if (keyOp.ConstantValue is not { HasValue: true, Value: string attrName }) return;
-        if (valueOp.ConstantValue is not { HasValue: true, Value: string value }) return;
+        if (!TagSetterDetection.TryGetStringConstant(valueArgument.Value, out var value))
+        {
+            return;
+        }
 
         if (!map.TryGetValue((attrName, value), out var message))
         {
@@ -183,7 +173,7 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
 
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.DeprecatedSemconvValue,
-            invocation.Arguments[valueArgIndex].Syntax.GetLocation(),
+            valueArgument.Syntax.GetLocation(),
             value,
             attrName,
             message));

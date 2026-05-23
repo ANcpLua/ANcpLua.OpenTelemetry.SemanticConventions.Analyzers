@@ -14,7 +14,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0070NonOtlpCollectorEndpointAnalyzer : AlAnalyzer {
+public sealed class Al0070NonOtlpCollectorEndpointAnalyzer : AlAnalyzer {
     private static readonly string[] s_otlpPatterns = [
         "4317", // gRPC default port
         "4318", // HTTP default port

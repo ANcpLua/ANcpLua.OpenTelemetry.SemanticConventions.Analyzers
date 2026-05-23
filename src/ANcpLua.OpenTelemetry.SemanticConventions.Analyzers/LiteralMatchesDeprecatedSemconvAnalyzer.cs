@@ -1,14 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -27,7 +19,7 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.LiteralMatchesDeprecatedSemconv);
+        [DiagnosticDescriptors.LiteralMatchesDeprecatedSemconv];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -52,7 +44,7 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 
     private static Dictionary<string, string> BuildDeprecationMap(Compilation compilation)
     {
-        var map = new Dictionary<string, string>(System.StringComparer.Ordinal);
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
         Walk(compilation.GlobalNamespace, map);
         return map;
     }
@@ -68,8 +60,7 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 
             foreach (var member in type.GetMembers())
             {
-                if (member is not IFieldSymbol field
-                    || !field.IsConst
+                if (member is not IFieldSymbol { IsConst: true } field
                     || field.Type.SpecialType != SpecialType.System_String
                     || field.DeclaredAccessibility != Accessibility.Public
                     || field.ConstantValue is not string value
@@ -121,18 +112,12 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
     {
         var invocation = (IInvocationOperation)context.Operation;
 
-        if (!TagSetterDetection.TagSetterMethodNames.Contains(invocation.TargetMethod.Name))
+        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
+            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArg))
         {
             return;
         }
 
-        var keyArgIndex = invocation.TargetMethod.IsExtensionMethod ? 1 : 0;
-        if (invocation.Arguments.Length <= keyArgIndex)
-        {
-            return;
-        }
-
-        var keyArg = invocation.Arguments[keyArgIndex];
         var keyArgValue = TagSetterDetection.UnwrapConversion(keyArg.Value);
 
         // Only fire on bare literals; OTSC0010 already handles typed-constant references.
@@ -141,8 +126,7 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (keyArgValue.ConstantValue is not { HasValue: true, Value: string literal }
-            || string.IsNullOrEmpty(literal))
+        if (!TagSetterDetection.TryGetNonEmptyStringConstant(keyArgValue, out var literal))
         {
             return;
         }

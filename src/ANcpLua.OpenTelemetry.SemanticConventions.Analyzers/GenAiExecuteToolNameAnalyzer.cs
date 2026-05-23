@@ -1,11 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -22,7 +17,7 @@ public sealed class GenAiExecuteToolNameAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.GenAiExecuteToolMissingToolName);
+        [DiagnosticDescriptors.GenAiExecuteToolMissingToolName];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -51,7 +46,7 @@ public sealed class GenAiExecuteToolNameAnalyzer : DiagnosticAnalyzer
 
         foreach (var call in calls)
         {
-            if (call.Key == OperationNameKey && call.Value == ExecuteToolValue)
+            if (call is { Key: OperationNameKey, Value: ExecuteToolValue })
             {
                 executeToolMarker = call;
                 hasMarker = true;

@@ -1,8 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using Microsoft.CodeAnalysis;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>Shared namespace-shape detection for SemConv attribute classes.</summary>
@@ -17,7 +15,7 @@ internal static class SemconvNamespace
     /// </summary>
     public static bool IsAttributesType(INamedTypeSymbol type)
     {
-        if (!type.Name.EndsWith("Attributes", System.StringComparison.Ordinal))
+        if (!type.Name.EndsWith("Attributes", StringComparison.Ordinal))
         {
             return false;
         }
@@ -34,9 +32,9 @@ internal static class SemconvNamespace
         }
 
         return s == Root
-               || s.StartsWith(Root + ".", System.StringComparison.Ordinal)
+               || s.StartsWith(Root + ".", StringComparison.Ordinal)
                || s.Contains("." + Root + ".")
-               || s.EndsWith("." + Root, System.StringComparison.Ordinal);
+               || s.EndsWith("." + Root, StringComparison.Ordinal);
     }
 
     /// <summary>

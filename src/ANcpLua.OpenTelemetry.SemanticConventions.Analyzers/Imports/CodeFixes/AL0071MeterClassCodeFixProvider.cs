@@ -7,7 +7,7 @@ namespace ANcpLua.Analyzers.CodeFixes.CodeFixes;
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(Al0071MeterClassCodeFixProvider))]
 [Shared]
-public sealed partial class Al0071MeterClassCodeFixProvider : CodeFixProvider {
+public sealed class Al0071MeterClassCodeFixProvider : CodeFixProvider {
     /// <summary>Gets the diagnostic IDs this provider can fix.</summary>
     public override ImmutableArray<string> FixableDiagnosticIds => [Al0071MeterClassMustBePartialStaticAnalyzer.DiagnosticId];
 

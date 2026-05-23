@@ -18,7 +18,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0066InvalidGenAiOperationNameAnalyzer : AlAnalyzer {
+public sealed class Al0066InvalidGenAiOperationNameAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0066.</summary>
     private const string DiagnosticId = "AL0066";
 

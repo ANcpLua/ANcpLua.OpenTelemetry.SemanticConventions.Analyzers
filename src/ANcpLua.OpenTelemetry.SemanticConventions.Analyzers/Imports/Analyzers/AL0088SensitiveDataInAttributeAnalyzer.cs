@@ -24,7 +24,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0088SensitiveDataInAttributeAnalyzer : AlAnalyzer {
+public sealed class Al0088SensitiveDataInAttributeAnalyzer : AlAnalyzer {
     /// <summary>
     ///     Patterns in attribute names that indicate sensitive data.
     /// </summary>

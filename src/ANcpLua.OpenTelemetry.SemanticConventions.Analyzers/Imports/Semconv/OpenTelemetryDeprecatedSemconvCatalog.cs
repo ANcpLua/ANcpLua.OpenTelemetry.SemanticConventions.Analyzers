@@ -1,3 +1,5 @@
+using OpenTelemetry.SemanticConventions.Analyzers;
+
 namespace ANcpLua.Analyzers.Analyzers;
 
 /// <summary>
@@ -213,6 +215,354 @@ internal static class OpenTelemetryDeprecatedSemconvCatalog {
         ["rpc.service"] = "Value should be included in `rpc.method` which is expected to be a fully-qualified name.",
     };
 
+    internal static ImmutableArray<SemconvMigrationCatalogEntry> Entries { get; } = BuildEntries();
+
+    private static readonly ImmutableDictionary<string, SemconvMigrationCatalogEntry> s_entriesByOldName =
+        BuildEntriesByOldName(Entries);
+
+    private static readonly ImmutableDictionary<string, SemconvMigrationCatalogEntry> s_valueEntriesByAttributeAndValue =
+        BuildValueEntriesByAttributeAndValue(Entries);
+
+    internal static bool TryGetMigrationByName(
+        string oldName,
+        out SemconvMigrationCatalogEntry entry) {
+        if (s_entriesByOldName.TryGetValue(oldName, out entry)) {
+            return true;
+        }
+
+        foreach (var prefix in s_deprecatedAttributePrefixes) {
+            if (!oldName.StartsWith(prefix.Key, StringComparison.Ordinal)) {
+                continue;
+            }
+
+            var suffix = oldName[prefix.Key.Length..];
+            entry = CreateAttributeEntry(
+                oldName,
+                $"{prefix.Value.ReplacementPrefix}{suffix}",
+                prefix.Value.Version,
+                "semantic-conventions/model deprecated attribute prefix",
+                SemconvMigrationKind.ExactRename);
+            return true;
+        }
+
+        entry = default;
+        return false;
+    }
+
+    internal static bool TryGetAttributeValueMigration(
+        string attributeName,
+        string attributeValue,
+        out SemconvMigrationCatalogEntry entry) =>
+        s_valueEntriesByAttributeAndValue.TryGetValue(BuildAttributeValueKey(attributeName, attributeValue), out entry);
+
+    private static ImmutableArray<SemconvMigrationCatalogEntry> BuildEntries() {
+        var count = s_deprecatedAttributes.Count
+            + s_deprecatedAttributePrefixes.Count
+            + s_deprecatedGenAiAttributes.Count
+            + s_deprecatedAttributeValues.Sum(static values => values.Value.Count)
+            + s_contextSensitiveDeprecatedNames.Count
+            + 8;
+
+        var builder = ImmutableArray.CreateBuilder<SemconvMigrationCatalogEntry>(count);
+
+        foreach (var item in s_deprecatedAttributes) {
+            builder.Add(CreateAttributeEntry(
+                item.Key,
+                item.Value.Replacement,
+                item.Value.Version,
+                "semantic-conventions/model deprecated attribute",
+                string.IsNullOrEmpty(item.Value.Replacement)
+                    ? SemconvMigrationKind.ManualReview
+                    : SemconvMigrationKind.ExactRename));
+        }
+
+        foreach (var item in s_deprecatedAttributePrefixes) {
+            builder.Add(CreateAttributeEntry(
+                item.Key + "*",
+                item.Value.ReplacementPrefix + "*",
+                item.Value.Version,
+                "semantic-conventions/model deprecated attribute prefix",
+                SemconvMigrationKind.ExactRename));
+        }
+
+        foreach (var item in s_deprecatedGenAiAttributes) {
+            builder.Add(CreateAttributeEntry(
+                item.Key,
+                item.Value,
+                "1.37.0",
+                "semantic-conventions/model deprecated GenAI attribute",
+                SemconvMigrationKind.ExactRename));
+        }
+
+        foreach (var attr in s_deprecatedAttributeValues) {
+            foreach (var value in attr.Value) {
+                var replacement = TryExtractExactReplacement(value.Value, out var extractedReplacement)
+                    ? ImmutableArray.Create(extractedReplacement)
+                    : ImmutableArray<string>.Empty;
+
+                var migrationKind = replacement.Length == 1
+                    ? SemconvMigrationKind.ExactValueRename
+                    : IsNoReplacement(value.Value)
+                        ? SemconvMigrationKind.RemovedNoReplacement
+                        : SemconvMigrationKind.ManualReview;
+
+                builder.Add(new SemconvMigrationCatalogEntry(
+                    oldName: BuildAttributeValueKey(attr.Key, value.Key),
+                    kind: SemconvMigrationItemKind.AttributeValue,
+                    signal: "any",
+                    domain: InferDomain(attr.Key),
+                    sinceVersion: "",
+                    replacementNames: replacement,
+                    migrationKind: migrationKind,
+                    changelogVersion: "",
+                    changelogEvidence: value.Value,
+                    defaultProductionSeverity: migrationKind == SemconvMigrationKind.ExactValueRename
+                        ? DiagnosticSeverity.Error
+                        : DiagnosticSeverity.Warning,
+                    fixtureSeverity: DiagnosticSeverity.Info));
+            }
+        }
+
+        foreach (var item in s_contextSensitiveDeprecatedNames) {
+            var migrationKind = IsNoReplacement(item.Value)
+                ? SemconvMigrationKind.RemovedNoReplacement
+                : SemconvMigrationKind.ContextSensitive;
+
+            builder.Add(new SemconvMigrationCatalogEntry(
+                oldName: item.Key,
+                kind: InferItemKind(item.Key),
+                signal: InferSignal(item.Key),
+                domain: InferDomain(item.Key),
+                sinceVersion: "",
+                replacementNames: ImmutableArray<string>.Empty,
+                migrationKind: migrationKind,
+                changelogVersion: "",
+                changelogEvidence: item.Value,
+                defaultProductionSeverity: DiagnosticSeverity.Warning,
+                fixtureSeverity: DiagnosticSeverity.Info));
+        }
+
+        AddChangelogEntries(builder);
+        return builder.ToImmutable();
+    }
+
+    private static ImmutableDictionary<string, SemconvMigrationCatalogEntry> BuildEntriesByOldName(
+        ImmutableArray<SemconvMigrationCatalogEntry> entries) {
+        var builder = ImmutableDictionary.CreateBuilder<string, SemconvMigrationCatalogEntry>(StringComparer.Ordinal);
+
+        foreach (var entry in entries) {
+            if (entry.Kind == SemconvMigrationItemKind.AttributeValue) {
+                continue;
+            }
+
+            if (!builder.ContainsKey(entry.OldName)) {
+                builder.Add(entry.OldName, entry);
+            }
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static ImmutableDictionary<string, SemconvMigrationCatalogEntry> BuildValueEntriesByAttributeAndValue(
+        ImmutableArray<SemconvMigrationCatalogEntry> entries) {
+        var builder = ImmutableDictionary.CreateBuilder<string, SemconvMigrationCatalogEntry>(StringComparer.Ordinal);
+
+        foreach (var entry in entries) {
+            if (entry.Kind != SemconvMigrationItemKind.AttributeValue || builder.ContainsKey(entry.OldName)) {
+                continue;
+            }
+
+            builder.Add(entry.OldName, entry);
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static void AddChangelogEntries(ImmutableArray<SemconvMigrationCatalogEntry>.Builder builder) {
+        builder.Add(new SemconvMigrationCatalogEntry(
+            "client.address",
+            SemconvMigrationItemKind.GuidanceOnly,
+            "trace",
+            "rpc",
+            "1.41.0",
+            ImmutableArray.Create("server.address"),
+            SemconvMigrationKind.ContextSensitive,
+            "1.41.0",
+            "RPC server spans no longer include client.address; use server.address/server.port for server endpoint data and keep client.* only when modeling client endpoint data.",
+            DiagnosticSeverity.Warning,
+            DiagnosticSeverity.Info));
+
+        builder.Add(new SemconvMigrationCatalogEntry(
+            "client.port",
+            SemconvMigrationItemKind.GuidanceOnly,
+            "trace",
+            "rpc",
+            "1.41.0",
+            ImmutableArray.Create("server.port"),
+            SemconvMigrationKind.ContextSensitive,
+            "1.41.0",
+            "RPC server spans no longer include client.port; use server.address/server.port for server endpoint data and keep client.* only when modeling client endpoint data.",
+            DiagnosticSeverity.Warning,
+            DiagnosticSeverity.Info));
+
+        builder.Add(new SemconvMigrationCatalogEntry(
+            "system.memory.shared",
+            SemconvMigrationItemKind.MetricName,
+            "metric",
+            "system",
+            "1.40.0",
+            ImmutableArray.Create("system.memory.linux.shared"),
+            SemconvMigrationKind.ExactRename,
+            "1.40.0",
+            "The system.memory.shared metric was renamed to system.memory.linux.shared.",
+            DiagnosticSeverity.Error,
+            DiagnosticSeverity.Info));
+
+        AddRemovedMetric(builder, "rpc.server.request.size", "RPC server request size metric was deprecated without a direct replacement.");
+        AddRemovedMetric(builder, "rpc.server.response.size", "RPC server response size metric was deprecated without a direct replacement.");
+        AddRemovedMetric(builder, "rpc.client.request.size", "RPC client request size metric was deprecated without a direct replacement.");
+        AddRemovedMetric(builder, "rpc.client.response.size", "RPC client response size metric was deprecated without a direct replacement.");
+
+        builder.Add(new SemconvMigrationCatalogEntry(
+            "rpc.message",
+            SemconvMigrationItemKind.EventName,
+            "event",
+            "rpc",
+            "1.40.0",
+            ImmutableArray<string>.Empty,
+            SemconvMigrationKind.RemovedNoReplacement,
+            "1.40.0",
+            "The rpc.message event and its message.* attributes were deprecated without a direct replacement.",
+            DiagnosticSeverity.Warning,
+            DiagnosticSeverity.Info));
+    }
+
+    private static void AddRemovedMetric(
+        ImmutableArray<SemconvMigrationCatalogEntry>.Builder builder,
+        string metricName,
+        string evidence) {
+        builder.Add(new SemconvMigrationCatalogEntry(
+            metricName,
+            SemconvMigrationItemKind.MetricName,
+            "metric",
+            "rpc",
+            "1.40.0",
+            ImmutableArray<string>.Empty,
+            SemconvMigrationKind.RemovedNoReplacement,
+            "1.40.0",
+            evidence,
+            DiagnosticSeverity.Warning,
+            DiagnosticSeverity.Info));
+    }
+
+    private static SemconvMigrationCatalogEntry CreateAttributeEntry(
+        string oldName,
+        string replacement,
+        string version,
+        string evidence,
+        SemconvMigrationKind migrationKind) {
+        var hasReplacement = !string.IsNullOrEmpty(replacement);
+
+        return new SemconvMigrationCatalogEntry(
+            oldName: oldName,
+            kind: SemconvMigrationItemKind.AttributeKey,
+            signal: InferSignal(oldName),
+            domain: InferDomain(oldName),
+            sinceVersion: version,
+            replacementNames: hasReplacement ? ImmutableArray.Create(replacement) : ImmutableArray<string>.Empty,
+            migrationKind: migrationKind,
+            changelogVersion: version,
+            changelogEvidence: evidence,
+            defaultProductionSeverity: hasReplacement && migrationKind == SemconvMigrationKind.ExactRename
+                ? DiagnosticSeverity.Error
+                : DiagnosticSeverity.Warning,
+            fixtureSeverity: DiagnosticSeverity.Info);
+    }
+
+    private static bool TryExtractExactReplacement(string guidance, [NotNullWhen(true)] out string? replacement) {
+        const string quotedPrefix = "Use '";
+        if (guidance.StartsWith(quotedPrefix, StringComparison.Ordinal)) {
+            var start = quotedPrefix.Length;
+            var end = guidance.IndexOf('\'', start);
+            if (end > start) {
+                replacement = guidance[start..end];
+                return true;
+            }
+        }
+
+        const string backtickPrefix = "Use `";
+        if (guidance.StartsWith(backtickPrefix, StringComparison.Ordinal)) {
+            var start = backtickPrefix.Length;
+            var end = guidance.IndexOf('`', start);
+            if (end > start) {
+                replacement = guidance[start..end];
+                return true;
+            }
+        }
+
+        replacement = null;
+        return false;
+    }
+
+    private static bool IsNoReplacement(string guidance) =>
+        guidance.IndexOf("no replacement", StringComparison.OrdinalIgnoreCase) >= 0
+        || guidance.IndexOf("Removed", StringComparison.OrdinalIgnoreCase) >= 0
+            && guidance.IndexOf("replacement", StringComparison.OrdinalIgnoreCase) < 0;
+
+    private static SemconvMigrationItemKind InferItemKind(string name) {
+        if (name.StartsWith("event.", StringComparison.Ordinal)) {
+            return SemconvMigrationItemKind.EventName;
+        }
+
+        return SemconvMigrationItemKind.AttributeKey;
+    }
+
+    private static string InferSignal(string name) {
+        if (name.StartsWith("event.", StringComparison.Ordinal)) {
+            return "event";
+        }
+
+        if (name.StartsWith("otel.", StringComparison.Ordinal)
+            || name.StartsWith("process.", StringComparison.Ordinal)
+            || name.StartsWith("service.", StringComparison.Ordinal)
+            || name.StartsWith("telemetry.", StringComparison.Ordinal)
+            || name.StartsWith("host.", StringComparison.Ordinal)
+            || name.StartsWith("os.", StringComparison.Ordinal)
+            || name.StartsWith("container.", StringComparison.Ordinal)
+            || name.StartsWith("k8s.", StringComparison.Ordinal)
+            || name.StartsWith("cloud.", StringComparison.Ordinal)) {
+            return "resource";
+        }
+
+        return "any";
+    }
+
+    private static string InferDomain(string name) {
+        if (name.StartsWith("gen_ai.", StringComparison.Ordinal)
+            || name.StartsWith("event.gen_ai.", StringComparison.Ordinal)) {
+            return "gen_ai";
+        }
+
+        if (name.StartsWith("feature_flag.", StringComparison.Ordinal)) {
+            return "feature_flag";
+        }
+
+        if (name.StartsWith("azure.", StringComparison.Ordinal)
+            || name.StartsWith("az.", StringComparison.Ordinal)) {
+            return "azure";
+        }
+
+        if (name.StartsWith("k8s.", StringComparison.Ordinal)) {
+            return "k8s";
+        }
+
+        var dot = name.IndexOf('.');
+        return dot > 0 ? name[..dot] : "otel";
+    }
+
+    private static string BuildAttributeValueKey(string attributeName, string attributeValue) =>
+        attributeName + "=" + attributeValue;
+
     internal static bool TryGetDeprecatedAttribute(
         string attributeName,
         out (string Replacement, string Version) info) {
@@ -221,11 +571,13 @@ internal static class OpenTelemetryDeprecatedSemconvCatalog {
         }
 
         foreach (var prefix in s_deprecatedAttributePrefixes) {
-            if (attributeName.StartsWith(prefix.Key, StringComparison.OrdinalIgnoreCase)) {
-                var suffix = attributeName[prefix.Key.Length..];
-                info = ($"{prefix.Value.ReplacementPrefix}{suffix}", prefix.Value.Version);
-                return true;
+            if (!attributeName.StartsWith(prefix.Key, StringComparison.OrdinalIgnoreCase)) {
+                continue;
             }
+
+            var suffix = attributeName[prefix.Key.Length..];
+            info = ($"{prefix.Value.ReplacementPrefix}{suffix}", prefix.Value.Version);
+            return true;
         }
 
         info = default;

@@ -18,7 +18,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     grouped class per field.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0135LegacySemanticConventionsAccessorAnalyzer : AlAnalyzer {
+public sealed class Al0135LegacySemanticConventionsAccessorAnalyzer : AlAnalyzer {
     private const string DiagnosticId = "AL0135";
 
     private static readonly DiagnosticDescriptor s_rule = CreateRule(

@@ -23,7 +23,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0092ConsiderSamplingAnalyzer : AlAnalyzer {
+public sealed class Al0092ConsiderSamplingAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0092.</summary>
     private const string DiagnosticId = "AL0092";
 

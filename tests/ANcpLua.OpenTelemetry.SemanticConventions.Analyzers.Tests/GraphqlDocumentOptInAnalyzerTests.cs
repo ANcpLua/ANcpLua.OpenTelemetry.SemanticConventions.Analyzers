@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
@@ -30,7 +31,7 @@ public class GraphqlDocumentOptInAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0002", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("OTSC0002", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GraphqlDocumentOptInAnalyzer, DefaultVerifier>
@@ -80,7 +81,7 @@ public class GraphqlDocumentOptInAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0002", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("OTSC0002", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GraphqlDocumentOptInAnalyzer, DefaultVerifier>

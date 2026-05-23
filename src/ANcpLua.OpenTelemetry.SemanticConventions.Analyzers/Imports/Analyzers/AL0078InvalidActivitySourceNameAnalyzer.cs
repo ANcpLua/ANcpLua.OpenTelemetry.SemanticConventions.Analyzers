@@ -21,7 +21,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0078InvalidActivitySourceNameAnalyzer : AlAnalyzer {
+public sealed class Al0078InvalidActivitySourceNameAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0078.</summary>
     private const string DiagnosticId = "AL0078";
 

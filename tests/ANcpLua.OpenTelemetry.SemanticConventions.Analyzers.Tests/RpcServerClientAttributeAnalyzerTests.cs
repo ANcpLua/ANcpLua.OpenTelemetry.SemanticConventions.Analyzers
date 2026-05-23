@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
@@ -35,7 +36,7 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0005", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.address");
 
@@ -61,7 +62,7 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0005", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.port");
 
@@ -132,10 +133,10 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var addr = new DiagnosticResult("OTSC0005", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var addr = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.address");
-        var port = new DiagnosticResult("OTSC0005", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var port = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
             .WithLocation(1)
             .WithArguments("client.port");
 

@@ -4,7 +4,7 @@
 ///     Base class for all ANcpLua analyzers.
 ///     Extends <see cref="DiagnosticAnalyzerBase"/> with resource-based rule creation.
 /// </summary>
-public abstract partial class AlAnalyzer : DiagnosticAnalyzerBase {
+public abstract class AlAnalyzer : DiagnosticAnalyzerBase {
     /// <summary>Base URL for diagnostic help links.</summary>
     public const string HelpLinkBase = "https://ancplua.mintlify.app/analyzers/rules/";
 

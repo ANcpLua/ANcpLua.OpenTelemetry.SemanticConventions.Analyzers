@@ -20,7 +20,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0129ToolMustDeclareSideEffectAnalyzer : AlAnalyzer {
+public sealed class Al0129ToolMustDeclareSideEffectAnalyzer : AlAnalyzer {
     /// <summary>The diagnostic identifier for AL0129.</summary>
     private const string DiagnosticId = "AL0129";
 

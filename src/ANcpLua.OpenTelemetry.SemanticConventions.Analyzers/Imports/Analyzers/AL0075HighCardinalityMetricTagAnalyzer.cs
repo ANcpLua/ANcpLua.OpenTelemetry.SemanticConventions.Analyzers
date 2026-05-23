@@ -25,7 +25,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0075HighCardinalityMetricTagAnalyzer : AlAnalyzer {
+public sealed class Al0075HighCardinalityMetricTagAnalyzer : AlAnalyzer {
     private enum KnownType { TagAttribute, CounterAttribute, HistogramAttribute }
 
     private static readonly string[] s_knownTypeNames = [

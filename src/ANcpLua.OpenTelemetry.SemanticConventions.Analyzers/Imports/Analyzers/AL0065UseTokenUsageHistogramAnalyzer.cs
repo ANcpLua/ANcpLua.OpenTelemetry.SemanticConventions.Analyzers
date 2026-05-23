@@ -14,7 +14,7 @@ namespace ANcpLua.Analyzers.Analyzers;
 ///     </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed partial class Al0065UseTokenUsageHistogramAnalyzer : AlAnalyzer {
+public sealed class Al0065UseTokenUsageHistogramAnalyzer : AlAnalyzer {
     private const string CorrectMetricName = "gen_ai.client.token.usage";
     private const string HistogramAttributeFullName = "Qyl.Instrumentation.Instrumentation.HistogramAttribute";
 

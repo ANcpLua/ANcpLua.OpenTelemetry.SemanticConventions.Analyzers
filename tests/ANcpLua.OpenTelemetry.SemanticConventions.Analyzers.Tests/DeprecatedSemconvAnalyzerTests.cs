@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
@@ -43,7 +44,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 
@@ -88,7 +89,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("NetAttributes.AttributeNetSockHostAddr", "Replaced by network.local.address.");
 

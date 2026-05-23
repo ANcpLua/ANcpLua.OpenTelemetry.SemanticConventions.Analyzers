@@ -1,13 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
@@ -29,7 +22,7 @@ public sealed class IncubatingSemconvInLibraryAnalyzer : DiagnosticAnalyzer
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(DiagnosticDescriptors.IncubatingSemconvInLibrary);
+        [DiagnosticDescriptors.IncubatingSemconvInLibrary];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -102,8 +95,8 @@ public sealed class IncubatingSemconvInLibraryAnalyzer : DiagnosticAnalyzer
 
         var name = compilation.AssemblyName;
         if (name is not null
-            && (name.EndsWith(".Tests", System.StringComparison.Ordinal)
-                || name.EndsWith(".Test", System.StringComparison.Ordinal)
+            && (name.EndsWith(".Tests", StringComparison.Ordinal)
+                || name.EndsWith(".Test", StringComparison.Ordinal)
                 || name.Contains(".Tests.")))
         {
             return false;
@@ -125,7 +118,7 @@ public sealed class IncubatingSemconvInLibraryAnalyzer : DiagnosticAnalyzer
         for (var current = node.Parent; current is not null; current = current.Parent)
         {
             if (current is FieldDeclarationSyntax field
-                && field.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ConstKeyword)))
+                && field.Modifiers.Any(m => m.IsKind(SyntaxKind.ConstKeyword)))
             {
                 return true;
             }

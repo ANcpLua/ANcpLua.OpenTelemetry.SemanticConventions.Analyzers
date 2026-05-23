@@ -122,7 +122,7 @@ public sealed partial class Al0079ManualSpanRecommendedAnalyzer : AlAnalyzer {
     /// <summary>
     ///     Syntax walker that detects complex async patterns in method bodies.
     /// </summary>
-    private sealed partial class ComplexPatternWalker(SemanticModel semanticModel, CancellationToken cancellationToken)
+    private sealed class ComplexPatternWalker(SemanticModel semanticModel, CancellationToken cancellationToken)
         : CSharpSyntaxWalker {
         public int AwaitCount { get; private set; }
         public bool HasTaskWhenAll { get; private set; }
