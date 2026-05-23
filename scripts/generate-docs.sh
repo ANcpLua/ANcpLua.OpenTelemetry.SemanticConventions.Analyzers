@@ -11,8 +11,11 @@ case "$mode" in
   validate|check|--check)
     dotnet run -c Release --project "$repo_root/tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator" -- --check
     ;;
+  audit|--audit)
+    dotnet run -c Release --project "$repo_root/tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator" -- --audit
+    ;;
   *)
-    echo "usage: scripts/generate-docs.sh [generate|validate]" >&2
+    echo "usage: scripts/generate-docs.sh [generate|validate|audit]" >&2
     exit 2
     ;;
 esac

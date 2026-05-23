@@ -37,7 +37,13 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
         public sealed class Meter
         {
+            public void CreateCounter<T>(string name) { }
             public void CreateHistogram<T>(string name) { }
+            public void CreateGauge<T>(string name) { }
+            public void CreateObservableCounter<T>(string name) { }
+            public void CreateObservableGauge<T>(string name) { }
+            public void CreateObservableUpDownCounter<T>(string name) { }
+            public void CreateUpDownCounter<T>(string name) { }
         }
 
         public sealed class Counter<T>
@@ -766,16 +772,23 @@ public class SupplementalSemconvMigrationAnalyzerTests
         }.RunAsync();
     }
 
-    [Fact]
-    public async Task Metric_Names_Are_Recognized_On_Meter_Instruments()
+    [Theory]
+    [InlineData("CreateCounter")]
+    [InlineData("CreateHistogram")]
+    [InlineData("CreateGauge")]
+    [InlineData("CreateObservableCounter")]
+    [InlineData("CreateObservableGauge")]
+    [InlineData("CreateObservableUpDownCounter")]
+    [InlineData("CreateUpDownCounter")]
+    public async Task Metric_Names_Are_Recognized_On_Meter_Instruments(string methodName)
     {
-        const string testCode = FakeTelemetry + """
+        var testCode = FakeTelemetry + $$"""
 
             class C
             {
                 void M(Meter meter)
                 {
-                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
+                    meter.{{methodName}}<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;

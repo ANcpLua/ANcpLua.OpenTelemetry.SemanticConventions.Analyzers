@@ -68,6 +68,42 @@ meter.CreateHistogram<long>("system.memory.shared"); // OTSC0030; use "system.me
 Curated changelog mentions: 156. Live metadata rows: 105. Supplemental diagnostic rows: 51. Exact supplemental replacements: 1. Manual/context-sensitive supplemental rows: 26. Removed/no-replacement supplemental rows: 24. Guidance-only rows: 0.
 Supplemental attribute-value fallback rows: 21. Exact value replacements: 19. Manual value rows: 0. Removed/no-replacement value rows: 2. These rows are used only when the same key/value is not covered by live `[Obsolete]` metadata from the referenced package.
 
+## Completion Audit
+
+This section is generated from the analyzer descriptors and migration catalog. It is intended to make the package-level completion claim reviewable without hand-counting the catalog.
+
+| Requirement | Current generated evidence |
+| -- | -- |
+| Preserve the 156 curated changelog-entry scope | `SemconvMigrationCatalog.Validate()` requires exactly `156` curated rows; current generated count is `156`. |
+| Prefer live `[Obsolete]` metadata where available | `105` of `156` curated rows are classified as `DeprecatedButGenerated`; `OTSC0010`, `OTSC0012`, and `OTSC0014` remain the live-metadata diagnostics. |
+| Use supplemental diagnostics only where metadata is insufficient | `51` curated rows are supplemental diagnostics: `1` exact replacement, `26` manual/context-sensitive, `24` removed/no-replacement, `0` guidance-only. |
+| Keep attribute-value fallback separate from the curated name/key/event/metric count | `21` supplemental attribute-value rows are outside the 156-entry inventory and are used only when live value metadata is absent. |
+| Keep severity context-sensitive | `OTSC0030` is production exact replacement error, `OTSC0031` is production manual-review warning, and `OTSC0032` is compatibility/test/generated info. |
+| Keep code fixes exact-only | `SupplementalSemconvMigrationCodeFixProvider` registers fixes only when diagnostic properties mark `ExactRename` or `ExactValueRename` and provide one replacement literal. |
+| Keep old-schema compatibility non-error | Test, fixture, migration, compatibility, translator, generated, catalog, and explicit older schema URL contexts select `OTSC0032`. |
+
+| Migration kind | Curated count |
+| -- | --: |
+| ContextSensitive | 26 |
+| DeprecatedButGenerated | 105 |
+| ExactRename | 1 |
+| RemovedNoReplacement | 24 |
+
+| Item kind | Curated count |
+| -- | --: |
+| AttributeKey | 147 |
+| EventName | 4 |
+| MetricName | 5 |
+
+| Production surface | Analyzer coverage evidence |
+| -- | -- |
+| `Activity.SetTag` / `AddTag` and baggage-like calls | Shared payload detection covers known tag setters plus `SetBaggage`/`AddBaggage` for live metadata and supplemental catalog checks. |
+| `TagList` / `ActivityTagsCollection` | `Add` payloads and `ActivityTagsCollection` indexer writes are recognized. |
+| Inline and local attribute payload collections | Arrays, object/collection initializers, C# collection expressions, `KeyValuePair<string, object?>`, local dictionary initializers, and local mutable dictionary `Add`/indexer writes are recognized when they visibly flow to telemetry APIs. |
+| Span/event/link/resource payloads | `ActivitySource.StartActivity(tags:)`, `ActivityEvent` tags, `ActivityLink` tags, and `ResourceBuilder.AddAttributes` are recognized. |
+| Metric payloads and names | `Counter<T>.Add`, `Histogram<T>.Record`, `UpDownCounter<T>.Add`, `Measurement<T>` tags, and `Meter.CreateCounter/Histogram/Gauge/Observable*` names are recognized. |
+| Logging payloads | Visible `ILogger.Log` state and `ILogger.BeginScope` state payloads are recognized when the key/value is statically visible. |
+
 | Version | Domain | Total | Live metadata | Supplemental | Exact supplemental | Manual/context | Removed/no replacement |
 | -- | -- | --: | --: | --: | --: | --: | --: |
 | 1.40.0 | rpc | 5 | 0 | 5 | 0 | 0 | 5 |
