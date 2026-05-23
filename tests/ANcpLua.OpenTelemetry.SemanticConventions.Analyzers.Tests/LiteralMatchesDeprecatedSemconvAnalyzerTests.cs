@@ -28,6 +28,12 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         public class FakeSpan
         {
             public FakeSpan SetTag(string key, object? value) => this;
+            public FakeSpan SetBaggage(string key, string? value) => this;
+        }
+
+        public sealed class TagList
+        {
+            public void Add(string key, object? value) { }
         }
 
         public sealed class ResourceBuilder
@@ -104,6 +110,56 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task SetBaggage_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.SetBaggage({|#0:"http.method"|}, "GET");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task TagList_Add_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(TagList tags)
+                {
+                    tags.Add({|#0:"http.method"|}, "GET");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 

@@ -25,7 +25,7 @@ The package-level generated catalog is in
 
 ## Design
 
-- **Live metadata first.** `OTSC0010`, `OTSC0012`, and `OTSC0014` resolve `[Obsolete]` metadata from the consumer's referenced `OpenTelemetry.SemanticConventions` assembly via Roslyn's symbol model, including visible dictionary/initializer payload keys and values. The referenced package remains the primary source of truth.
+- **Live metadata first.** `OTSC0010`, `OTSC0012`, and `OTSC0014` resolve `[Obsolete]` metadata from the consumer's referenced `OpenTelemetry.SemanticConventions` assembly via Roslyn's symbol model, including baggage, tag collections, and visible dictionary/initializer payload keys and values. The referenced package remains the primary source of truth.
 - **Curated migration inventory.** The package tracks 156 changelog/model mentions and separates rows covered by generated `[Obsolete]` metadata from rows that need supplemental analyzer diagnostics.
 - **Supplemental catalog only where metadata is insufficient.** `OTSC0030`-`OTSC0032` cover changelog/model entries that are not reliably visible through generated `[Obsolete]` constants, including metric names, removed events, context-sensitive migrations, and compatibility payloads. Deprecated generated values remain primarily covered by `OTSC0014`.
 - **Production payload recognition.** Supplemental diagnostics inspect visible dictionary, collection-initializer, and `KeyValuePair<string, object?>` payloads when they flow into telemetry emission APIs such as `ActivityEvent` tags and `ResourceBuilder.AddAttributes`.

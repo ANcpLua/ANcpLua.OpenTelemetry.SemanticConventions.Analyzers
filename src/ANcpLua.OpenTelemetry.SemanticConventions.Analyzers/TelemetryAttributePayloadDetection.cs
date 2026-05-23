@@ -5,13 +5,17 @@ namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 internal static class TelemetryAttributePayloadDetection
 {
+    private static readonly ImmutableHashSet<string> BaggageMethodNames = ImmutableHashSet.Create(
+        "SetBaggage",
+        "AddBaggage");
+
     public static void AnalyzeInvocation(
         IInvocationOperation invocation,
         Action<TelemetryAttributePayloadLiteral> report)
     {
-        if (TagSetterDetection.IsTagSetterInvocation(invocation))
+        if (IsKnownTelemetryKeyValueInvocation(invocation))
         {
-            AnalyzeTagSetterInvocation(invocation, report);
+            AnalyzeKeyValueInvocation(invocation, report);
         }
 
         if (IsResourceBuilderAddAttributes(invocation)
@@ -95,11 +99,11 @@ internal static class TelemetryAttributePayloadDetection
         }
     }
 
-    private static void AnalyzeTagSetterInvocation(
+    private static void AnalyzeKeyValueInvocation(
         IInvocationOperation invocation,
         Action<TelemetryAttributePayloadLiteral> report)
     {
-        if (!TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArgument)
+        if (!TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var keyArgument)
             || !TryGetKey(keyArgument.Value, out var key, out var keySyntax, out var keyIsBareLiteral))
         {
             return;
@@ -107,7 +111,7 @@ internal static class TelemetryAttributePayloadDetection
 
         string? value = null;
         SyntaxNode? valueSyntax = null;
-        if (TagSetterDetection.TryGetTagSetterValueArgument(invocation, out var valueArgument))
+        if (TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 1, out var valueArgument))
         {
             TryGetValue(valueArgument.Value, out value, out valueSyntax);
         }
@@ -313,6 +317,18 @@ internal static class TelemetryAttributePayloadDetection
             && invocation.TargetMethod.Parameters[0].Type.Name == "ResourceBuilder";
     }
 
+    private static bool IsKnownTelemetryKeyValueInvocation(IInvocationOperation invocation)
+    {
+        if (TagSetterDetection.IsTagSetterInvocation(invocation)
+            || BaggageMethodNames.Contains(invocation.TargetMethod.Name))
+        {
+            return true;
+        }
+
+        return invocation.TargetMethod.Name == "Add"
+            && IsTelemetryTagCollection(invocation.Instance?.Type ?? invocation.TargetMethod.ContainingType);
+    }
+
     private static bool IsInsideKnownTelemetryAttributePayload(IOperation operation)
     {
         for (var current = operation.Parent; current is not null; current = current.Parent)
@@ -366,6 +382,9 @@ internal static class TelemetryAttributePayloadDetection
         return named.Name is "Dictionary" or "IDictionary" or "IReadOnlyDictionary"
             && named.TypeArguments[0].SpecialType == SpecialType.System_String;
     }
+
+    private static bool IsTelemetryTagCollection(ITypeSymbol? type) =>
+        type?.Name is "TagList" or "ActivityTagsCollection";
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
