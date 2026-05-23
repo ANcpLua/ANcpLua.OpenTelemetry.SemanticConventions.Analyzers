@@ -4,7 +4,7 @@
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0012: Flags string literals in tag-setter callsites whose values match a
+/// OTSC0012: Flags telemetry attribute key literals whose values match a
 /// semantic-convention attribute name that is marked <c>[Obsolete]</c> in the
 /// consumer's resolved <c>OpenTelemetry.SemanticConventions</c> assembly.
 /// </summary>

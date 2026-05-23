@@ -48,6 +48,16 @@ public class PreferSemconvConstantAnalyzerTests
         {
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
+
+        public sealed class Counter<T>
+        {
+            public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
+        }
+
+        public readonly struct Measurement<T>
+        {
+            public Measurement(T value, params KeyValuePair<string, object?>[] tags) { }
+        }
         """;
 
     [Fact]
@@ -242,6 +252,56 @@ public class PreferSemconvConstantAnalyzerTests
                         {
                             { {|#0:"server.address"|}, "localhost" },
                         });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task MetricCounter_Add_Hardcoded_Key_Reports_OTSC0011()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                void Handle(Counter<long> counter)
+                {
+                    counter.Add(1, new KeyValuePair<string, object?>({|#0:"server.address"|}, "localhost"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+            .WithLocation(0)
+            .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
+
+        await new CSharpAnalyzerTest<PreferSemconvConstantAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Measurement_Tags_Hardcoded_Key_Reports_OTSC0011()
+    {
+        const string testCode = SemconvFixture + """
+
+            class Server
+            {
+                Measurement<long> Create()
+                {
+                    return new Measurement<long>(1, new KeyValuePair<string, object?>({|#0:"server.address"|}, "localhost"));
                 }
             }
             """;

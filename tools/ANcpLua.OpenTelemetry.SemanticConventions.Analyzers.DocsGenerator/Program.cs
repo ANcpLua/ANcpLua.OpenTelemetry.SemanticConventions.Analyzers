@@ -119,6 +119,8 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
+    sb.AppendLine("counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // OTSC0012 in metric instrument tag payloads.");
+    sb.AppendLine("histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // OTSC0030 supplemental value fallback in metric tag payloads.");
     sb.AppendLine("activity.SetTag(\"cloud.platform\", \"azure_aks\"); // OTSC0030 supplemental value fallback when live value metadata is absent.");
     sb.AppendLine("activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.");
     sb.AppendLine("tags.Add(\"message.id\", \"42\");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.");

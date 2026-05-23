@@ -73,6 +73,12 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         }
 
         AnalyzeMetricInstrumentName(context, invocation, legacyMode);
+        AnalyzeMetricMeasurementTags(
+            context,
+            invocation,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues);
         AnalyzeActivityOrEventName(context, invocation, legacyMode);
         AnalyzeTelemetryAttributePayloadInvocation(
             context,
@@ -120,6 +126,18 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 eventNameSyntax,
                 legacyMode,
                 liveObsoleteAttributeNames,
+                isProductionEmission: true);
+        }
+
+        if (IsMetricMeasurementCreation(objectCreation.Type))
+        {
+            AnalyzeArgumentsAfterFirst(
+                context,
+                objectCreation.Arguments,
+                extensionMethod: false,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
                 isProductionEmission: true);
         }
 
@@ -225,6 +243,29 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         ReportCatalogDiagnostic(context, entry, metricNameSyntax, legacyMode, isProductionEmission: true);
     }
 
+    private static void AnalyzeMetricMeasurementTags(
+        OperationAnalysisContext context,
+        IInvocationOperation invocation,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues)
+    {
+        if (invocation.TargetMethod.Name is not ("Add" or "Record")
+            || !IsMetricInstrument(invocation.TargetMethod.ContainingType))
+        {
+            return;
+        }
+
+        AnalyzeArgumentsAfterFirst(
+            context,
+            invocation.Arguments,
+            invocation.TargetMethod.IsExtensionMethod,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues,
+            isProductionEmission: true);
+    }
+
     private static void AnalyzeActivityOrEventName(
         OperationAnalysisContext context,
         IInvocationOperation invocation,
@@ -249,6 +290,36 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             && SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(eventEntry))
         {
             ReportCatalogDiagnostic(context, eventEntry, eventNameSyntax, legacyMode, isProductionEmission: true);
+        }
+    }
+
+    private static void AnalyzeArgumentsAfterFirst(
+        OperationAnalysisContext context,
+        ImmutableArray<IArgumentOperation> arguments,
+        bool extensionMethod,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        for (var i = 0; i < arguments.Length; i++)
+        {
+            var argument = arguments[i];
+            var logicalOrdinal = argument.Parameter is null
+                ? i
+                : argument.Parameter.Ordinal - (extensionMethod ? 1 : 0);
+            if (logicalOrdinal <= 0 && i == 0)
+            {
+                continue;
+            }
+
+            AnalyzeTelemetryAttributePayload(
+                context,
+                argument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
         }
     }
 
@@ -640,11 +711,17 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     private static bool IsMeterLike(INamedTypeSymbol? type) =>
         type?.Name is "Meter";
 
+    private static bool IsMetricInstrument(INamedTypeSymbol? type) =>
+        type?.Name is "Counter" or "Histogram" or "UpDownCounter";
+
     private static bool IsActivitySourceLike(INamedTypeSymbol? type) =>
         type?.Name is "ActivitySource";
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
+
+    private static bool IsMetricMeasurementCreation(ITypeSymbol? type) =>
+        type?.Name is "Measurement";
 
     private static bool IsResourceBuilderAddAttributes(IInvocationOperation invocation)
     {
@@ -675,6 +752,21 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             if (argument.Parent is IInvocationOperation invocation
                 && IsResourceBuilderAddAttributes(invocation)
                 && IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IInvocationOperation metricInvocation
+                && metricInvocation.TargetMethod.Name is "Add" or "Record"
+                && IsMetricInstrument(metricInvocation.TargetMethod.ContainingType)
+                && IsAfterFirstLogicalArgument(argument, metricInvocation.TargetMethod.IsExtensionMethod))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IObjectCreationOperation metricMeasurement
+                && IsMetricMeasurementCreation(metricMeasurement.Type)
+                && IsAfterFirstLogicalArgument(argument, extensionMethod: false))
             {
                 return true;
             }
@@ -798,6 +890,18 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     {
         var parameterOrdinal = extensionMethod ? logicalParameterOrdinal + 1 : logicalParameterOrdinal;
         return argument.Parameter?.Ordinal == parameterOrdinal;
+    }
+
+    private static bool IsAfterFirstLogicalArgument(
+        IArgumentOperation argument,
+        bool extensionMethod)
+    {
+        if (argument.Parameter is null)
+        {
+            return false;
+        }
+
+        return argument.Parameter.Ordinal - (extensionMethod ? 1 : 0) > 0;
     }
 
     private static ImmutableHashSet<string> BuildLiveObsoleteAttributeNames(Compilation compilation)

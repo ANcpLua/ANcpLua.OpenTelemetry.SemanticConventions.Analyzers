@@ -55,7 +55,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true,
-        description: "When a string literal passed to SetTag/AddTag/SetAttribute matches a known semantic-convention attribute name from OpenTelemetry.SemanticConventions.Attributes.*, prefer the typed constant for refactor-safety and discoverability.",
+        description: "When a telemetry attribute key literal matches a known semantic-convention attribute name from OpenTelemetry.SemanticConventions.Attributes.*, prefer the typed constant for refactor-safety and discoverability.",
         helpLinkUri: HelpLinkBase + "OTSC0011.md");
 
     public static readonly DiagnosticDescriptor LiteralMatchesDeprecatedSemconv = new(
@@ -65,7 +65,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "When a string literal passed to SetTag/AddTag/SetAttribute matches a semantic-convention attribute that is marked [Obsolete] in the consumer's referenced OpenTelemetry.SemanticConventions package, the call site needs migration regardless of whether a typed constant is being used.",
+        description: "When a telemetry attribute key literal matches a semantic-convention attribute that is marked [Obsolete] in the consumer's referenced OpenTelemetry.SemanticConventions package, the call site needs migration regardless of whether a typed constant is being used.",
         helpLinkUri: HelpLinkBase + "OTSC0012.md");
 
     public static readonly DiagnosticDescriptor DeprecatedSemconvValue = new(
@@ -75,7 +75,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "A constant string passed as the value of a known semantic-convention attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class.",
+        description: "A constant string used as the value of a known semantic-convention telemetry attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class.",
         helpLinkUri: HelpLinkBase + "OTSC0014.md");
 
     public static readonly DiagnosticDescriptor IncubatingSemconvInLibrary = new(

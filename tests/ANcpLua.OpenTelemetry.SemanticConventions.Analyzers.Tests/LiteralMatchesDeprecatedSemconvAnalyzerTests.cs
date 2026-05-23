@@ -45,6 +45,16 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         {
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
+
+        public sealed class Counter<T>
+        {
+            public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
+        }
+
+        public readonly struct Measurement<T>
+        {
+            public Measurement(T value, params KeyValuePair<string, object?>[] tags) { }
+        }
         """;
 
     [Fact]
@@ -243,6 +253,56 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task MetricCounter_Add_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(Counter<long> counter)
+                {
+                    counter.Add(1, new KeyValuePair<string, object?>({|#0:"http.method"|}, "GET"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Measurement_Tags_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                Measurement<long> M()
+                {
+                    return new Measurement<long>(1, new KeyValuePair<string, object?>({|#0:"http.method"|}, "GET"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 }
