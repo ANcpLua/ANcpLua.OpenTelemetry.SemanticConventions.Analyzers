@@ -123,7 +123,24 @@ public class SupplementalSemconvMigrationAnalyzerTests
     [Fact]
     public async Task Generated_Value_Metadata_Is_Not_Duplicated_By_Supplemental_Catalog()
     {
-        const string testCode = FakeTelemetry + """
+        const string liveMetadataFixture = """
+
+            namespace OpenTelemetry.SemanticConventions
+            {
+                public static class CloudAttributes
+                {
+                    public const string AttributeCloudPlatform = "cloud.platform";
+
+                    public static class CloudPlatformValues
+                    {
+                        [System.Obsolete("Use 'azure.aks' instead.")]
+                        public const string AzureAks = "azure_aks";
+                    }
+                }
+            }
+            """;
+
+        const string testCode = FakeTelemetry + liveMetadataFixture + """
 
             class C
             {
@@ -137,6 +154,54 @@ public class SupplementalSemconvMigrationAnalyzerTests
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Supplemental_Exact_Value_Rename_Reports_Error_When_Live_Metadata_Is_Absent()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(FakeSpan span)
+                {
+                    span.SetTag("cloud.platform", {|#0:"azure_aks"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Supplemental_Removed_Value_Reports_Manual_Review()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(FakeSpan span)
+                {
+                    span.SetTag("db.system", {|#0:"coldfusion"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 
@@ -516,6 +581,42 @@ public class SupplementalSemconvMigrationAnalyzerTests
                 void M(Meter meter)
                 {
                     meter.CreateHistogram<long>("system.memory.linux.shared");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Exact_Value_Rename_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(FakeSpan span)
+                {
+                    span.SetTag("cloud.platform", {|#0:"azure_aks"|});
+                }
+            }
+            """;
+
+        const string fixedCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(FakeSpan span)
+                {
+                    span.SetTag("cloud.platform", "azure.aks");
                 }
             }
             """;

@@ -701,8 +701,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         string value,
         out SemconvMigrationCatalogEntry entry)
     {
-        entry = default;
-        return false;
+        return SemconvMigrationCatalog.TryGetAttributeValueMigration(key, value, out entry)
+            && SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry);
     }
 
     private static bool TryGetIndexerKey(
