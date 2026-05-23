@@ -1,8 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using ANcpLua.Analyzers.Analyzers;
-
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -184,8 +182,13 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             || !IsMeterLike(invocation.TargetMethod.ContainingType)
             || !TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var nameArgument)
             || !TryGetBareLiteral(nameArgument.Value, out var metricName, out var metricNameSyntax)
-            || !OpenTelemetryDeprecatedSemconvCatalog.TryGetMigrationByName(metricName, out var entry)
+            || !SemconvMigrationCatalog.TryGetMigrationByName(metricName, out var entry)
             || entry.Kind != SemconvMigrationItemKind.MetricName)
+        {
+            return;
+        }
+
+        if (!SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry))
         {
             return;
         }
@@ -202,8 +205,9 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             && IsActivitySourceLike(invocation.TargetMethod.ContainingType)
             && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var spanArgument)
             && TryGetBareLiteral(spanArgument.Value, out var spanName, out var spanNameSyntax)
-            && OpenTelemetryDeprecatedSemconvCatalog.TryGetMigrationByName(spanName, out var spanEntry)
-            && spanEntry.Kind == SemconvMigrationItemKind.SpanName)
+            && SemconvMigrationCatalog.TryGetMigrationByName(spanName, out var spanEntry)
+            && spanEntry.Kind == SemconvMigrationItemKind.SpanName
+            && SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(spanEntry))
         {
             ReportCatalogDiagnostic(context, spanEntry, spanNameSyntax, legacyMode, isProductionEmission: true);
         }
@@ -211,8 +215,9 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         if (invocation.TargetMethod.Name == "AddEvent"
             && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var eventArgument)
             && TryGetBareLiteral(eventArgument.Value, out var eventName, out var eventNameSyntax)
-            && OpenTelemetryDeprecatedSemconvCatalog.TryGetMigrationByName(eventName, out var eventEntry)
-            && eventEntry.Kind == SemconvMigrationItemKind.EventName)
+            && SemconvMigrationCatalog.TryGetMigrationByName(eventName, out var eventEntry)
+            && eventEntry.Kind == SemconvMigrationItemKind.EventName
+            && SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(eventEntry))
         {
             ReportCatalogDiagnostic(context, eventEntry, eventNameSyntax, legacyMode, isProductionEmission: true);
         }
@@ -227,14 +232,14 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         bool isProductionEmission)
     {
         if (liveObsoleteAttributeNames.Contains(key)
-            || !OpenTelemetryDeprecatedSemconvCatalog.TryGetMigrationByName(key, out var entry))
+            || !SemconvMigrationCatalog.TryGetMigrationByName(key, out var entry))
         {
             return;
         }
 
         if (entry.Kind == SemconvMigrationItemKind.MetricName
             || entry.Kind == SemconvMigrationItemKind.SpanName
-            || entry.Kind == SemconvMigrationItemKind.GuidanceOnly)
+            || !SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry))
         {
             return;
         }
@@ -253,7 +258,7 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     {
         var valueKey = key + "=" + value;
         if (liveObsoleteAttributeValues.Contains(valueKey)
-            || !OpenTelemetryDeprecatedSemconvCatalog.TryGetAttributeValueMigration(key, value, out var entry))
+            || !TryGetAttributeValueMigration(key, value, out var entry))
         {
             return;
         }
@@ -374,6 +379,15 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
+
+    private static bool TryGetAttributeValueMigration(
+        string key,
+        string value,
+        out SemconvMigrationCatalogEntry entry)
+    {
+        entry = default;
+        return false;
+    }
 
     private static bool TryGetBareLiteral(
         IOperation operation,
