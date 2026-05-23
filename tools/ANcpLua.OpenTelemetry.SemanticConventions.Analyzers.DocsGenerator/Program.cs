@@ -122,6 +122,8 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
     sb.AppendLine("counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // OTSC0012 in metric instrument tag payloads.");
     sb.AppendLine("histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // OTSC0030 supplemental value fallback in metric tag payloads.");
+    sb.AppendLine("logger.Log(LogLevel.Information, eventId, new[] { new KeyValuePair<string, object?>(\"event.name\", \"legacy.event\") }, exception, formatter); // OTSC0031 in visible ILogger state payloads.");
+    sb.AppendLine("logger.BeginScope(new[] { new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\") }); // OTSC0030 supplemental value fallback in logging scopes.");
     sb.AppendLine("activity.SetTag(\"cloud.platform\", \"azure_aks\"); // OTSC0030 supplemental value fallback when live value metadata is absent.");
     sb.AppendLine("activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.");
     sb.AppendLine("tags.Add(\"message.id\", \"42\");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.");
