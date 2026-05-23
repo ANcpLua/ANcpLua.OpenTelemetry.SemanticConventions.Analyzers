@@ -74,7 +74,16 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
         AnalyzeMetricInstrumentName(context, invocation, legacyMode);
         AnalyzeActivityOrEventName(context, invocation, legacyMode);
-        AnalyzeKeyValueInvocation(context, invocation, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues);
+        AnalyzeTelemetryAttributePayloadInvocation(
+            context,
+            invocation,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues);
+        if (!IsInsideKnownTelemetryAttributePayload(invocation))
+        {
+            AnalyzeKeyValueInvocation(context, invocation, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues);
+        }
     }
 
     private static void AnalyzeObjectCreation(
@@ -90,29 +99,15 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         }
 
         if (IsKeyValuePairStringObject(objectCreation.Type)
-            && TryGetArgumentByOrdinal(objectCreation.Arguments, extensionMethod: false, 0, out var keyArgument)
-            && TryGetArgumentByOrdinal(objectCreation.Arguments, extensionMethod: false, 1, out var valueArgument)
-            && TryGetBareLiteral(keyArgument.Value, out var key, out var keySyntax))
+            && !IsInsideKnownTelemetryAttributePayload(objectCreation))
         {
-            ReportNameIfCatalogOnly(
+            AnalyzeKeyValuePairCreation(
                 context,
-                key,
-                keySyntax,
+                objectCreation,
                 legacyMode,
                 liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
                 isProductionEmission: false);
-
-            if (TryGetBareLiteral(valueArgument.Value, out var value, out var valueSyntax))
-            {
-                ReportValueIfCatalogOnly(
-                    context,
-                    key,
-                    value,
-                    valueSyntax,
-                    legacyMode,
-                    liveObsoleteAttributeValues,
-                    isProductionEmission: false);
-            }
         }
 
         if (IsActivityEventCreation(objectCreation.Type)
@@ -127,6 +122,40 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 liveObsoleteAttributeNames,
                 isProductionEmission: true);
         }
+
+        if (IsActivityEventCreation(objectCreation.Type)
+            && TryGetArgumentByNameOrOrdinal(objectCreation.Arguments, "tags", 2, out var tagsArgument))
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                tagsArgument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+        }
+    }
+
+    private static void AnalyzeTelemetryAttributePayloadInvocation(
+        OperationAnalysisContext context,
+        IInvocationOperation invocation,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues)
+    {
+        if (!IsResourceBuilderAddAttributes(invocation)
+            || !TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
+        {
+            return;
+        }
+
+        AnalyzeTelemetryAttributePayload(
+            context,
+            attributesArgument.Value,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues,
+            isProductionEmission: true);
     }
 
     private static void AnalyzeKeyValueInvocation(
@@ -266,6 +295,242 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         ReportCatalogDiagnostic(context, entry, syntax, legacyMode, isProductionEmission);
     }
 
+    private static void AnalyzeTelemetryAttributePayload(
+        OperationAnalysisContext context,
+        IOperation operation,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        var unwrapped = TagSetterDetection.UnwrapConversion(operation);
+
+        if (unwrapped is IArrayCreationOperation arrayCreation)
+        {
+            if (arrayCreation.Initializer is not null)
+            {
+                AnalyzeArrayInitializer(
+                    context,
+                    arrayCreation.Initializer,
+                    legacyMode,
+                    liveObsoleteAttributeNames,
+                    liveObsoleteAttributeValues,
+                    isProductionEmission);
+            }
+
+            return;
+        }
+
+        if (unwrapped is IArrayInitializerOperation arrayInitializer)
+        {
+            AnalyzeArrayInitializer(
+                context,
+                arrayInitializer,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+            return;
+        }
+
+        if (unwrapped is IObjectCreationOperation objectCreation)
+        {
+            if (IsKeyValuePairStringObject(objectCreation.Type))
+            {
+                AnalyzeKeyValuePairCreation(
+                    context,
+                    objectCreation,
+                    legacyMode,
+                    liveObsoleteAttributeNames,
+                    liveObsoleteAttributeValues,
+                    isProductionEmission);
+            }
+
+            if (objectCreation.Initializer is not null)
+            {
+                AnalyzeObjectInitializer(
+                    context,
+                    objectCreation.Initializer,
+                    legacyMode,
+                    liveObsoleteAttributeNames,
+                    liveObsoleteAttributeValues,
+                    isProductionEmission);
+            }
+
+            return;
+        }
+
+        if (unwrapped is IInvocationOperation invocation
+            && invocation.TargetMethod.Name == "Add")
+        {
+            AnalyzeAddLikePayloadInvocation(
+                context,
+                invocation,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+            return;
+        }
+
+        if (unwrapped is ISimpleAssignmentOperation assignment)
+        {
+            AnalyzeIndexerAssignmentPayload(
+                context,
+                assignment,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeArrayInitializer(
+        OperationAnalysisContext context,
+        IArrayInitializerOperation initializer,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        foreach (var element in initializer.ElementValues)
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                element,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeObjectInitializer(
+        OperationAnalysisContext context,
+        IObjectOrCollectionInitializerOperation initializer,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        foreach (var initializerOperation in initializer.Initializers)
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                initializerOperation,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeKeyValuePairCreation(
+        OperationAnalysisContext context,
+        IObjectCreationOperation objectCreation,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        if (!TryGetArgumentByOrdinal(objectCreation.Arguments, extensionMethod: false, 0, out var keyArgument)
+            || !TryGetArgumentByOrdinal(objectCreation.Arguments, extensionMethod: false, 1, out var valueArgument)
+            || !TryGetBareLiteral(keyArgument.Value, out var key, out var keySyntax))
+        {
+            return;
+        }
+
+        ReportNameIfCatalogOnly(
+            context,
+            key,
+            keySyntax,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            isProductionEmission);
+
+        if (TryGetBareLiteral(valueArgument.Value, out var value, out var valueSyntax))
+        {
+            ReportValueIfCatalogOnly(
+                context,
+                key,
+                value,
+                valueSyntax,
+                legacyMode,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeAddLikePayloadInvocation(
+        OperationAnalysisContext context,
+        IInvocationOperation invocation,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        if (!TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var keyArgument)
+            || !TryGetBareLiteral(keyArgument.Value, out var key, out var keySyntax))
+        {
+            return;
+        }
+
+        ReportNameIfCatalogOnly(
+            context,
+            key,
+            keySyntax,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            isProductionEmission);
+
+        if (TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 1, out var valueArgument)
+            && TryGetBareLiteral(valueArgument.Value, out var value, out var valueSyntax))
+        {
+            ReportValueIfCatalogOnly(
+                context,
+                key,
+                value,
+                valueSyntax,
+                legacyMode,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
+    private static void AnalyzeIndexerAssignmentPayload(
+        OperationAnalysisContext context,
+        ISimpleAssignmentOperation assignment,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues,
+        bool isProductionEmission)
+    {
+        if (!TryGetIndexerKey(assignment.Target, out var key, out var keySyntax))
+        {
+            return;
+        }
+
+        ReportNameIfCatalogOnly(
+            context,
+            key,
+            keySyntax,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            isProductionEmission);
+
+        if (TryGetBareLiteral(assignment.Value, out var value, out var valueSyntax))
+        {
+            ReportValueIfCatalogOnly(
+                context,
+                key,
+                value,
+                valueSyntax,
+                legacyMode,
+                liveObsoleteAttributeValues,
+                isProductionEmission);
+        }
+    }
+
     private static void ReportCatalogDiagnostic(
         OperationAnalysisContext context,
         SemconvMigrationCatalogEntry entry,
@@ -380,12 +645,85 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
 
+    private static bool IsResourceBuilderAddAttributes(IInvocationOperation invocation)
+    {
+        if (invocation.TargetMethod.Name != "AddAttributes")
+        {
+            return false;
+        }
+
+        if (invocation.TargetMethod.ContainingType.Name == "ResourceBuilder")
+        {
+            return true;
+        }
+
+        return invocation.TargetMethod.IsExtensionMethod
+            && invocation.TargetMethod.Parameters.Length > 0
+            && invocation.TargetMethod.Parameters[0].Type.Name == "ResourceBuilder";
+    }
+
+    private static bool IsInsideKnownTelemetryAttributePayload(IOperation operation)
+    {
+        for (var current = operation.Parent; current is not null; current = current.Parent)
+        {
+            if (current is not IArgumentOperation argument)
+            {
+                continue;
+            }
+
+            if (argument.Parent is IInvocationOperation invocation
+                && IsResourceBuilderAddAttributes(invocation)
+                && IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IObjectCreationOperation objectCreation
+                && IsActivityEventTagsArgument(objectCreation, argument))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsActivityEventTagsArgument(
+        IObjectCreationOperation objectCreation,
+        IArgumentOperation argument) =>
+        IsActivityEventCreation(objectCreation.Type)
+        && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
+            || argument.Parameter?.Ordinal == 2);
+
     private static bool TryGetAttributeValueMigration(
         string key,
         string value,
         out SemconvMigrationCatalogEntry entry)
     {
         entry = default;
+        return false;
+    }
+
+    private static bool TryGetIndexerKey(
+        IOperation operation,
+        [NotNullWhen(true)] out string? key,
+        [NotNullWhen(true)] out LiteralExpressionSyntax? syntax)
+    {
+        var unwrapped = TagSetterDetection.UnwrapConversion(operation);
+        if (unwrapped is IPropertyReferenceOperation propertyReference)
+        {
+            foreach (var argument in propertyReference.Arguments)
+            {
+                if (IsLogicalArgument(argument, extensionMethod: false, 0)
+                    && TryGetBareLiteral(argument.Value, out key, out syntax))
+                {
+                    return true;
+                }
+            }
+        }
+
+        key = null;
+        syntax = null;
         return false;
     }
 
@@ -432,6 +770,33 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
         argument = null;
         return false;
+    }
+
+    private static bool TryGetArgumentByNameOrOrdinal(
+        ImmutableArray<IArgumentOperation> arguments,
+        string parameterName,
+        int parameterOrdinal,
+        [NotNullWhen(true)] out IArgumentOperation? argument)
+    {
+        foreach (var candidate in arguments)
+        {
+            if (string.Equals(candidate.Parameter?.Name, parameterName, StringComparison.Ordinal))
+            {
+                argument = candidate;
+                return true;
+            }
+        }
+
+        return TryGetArgumentByOrdinal(arguments, extensionMethod: false, parameterOrdinal, out argument);
+    }
+
+    private static bool IsLogicalArgument(
+        IArgumentOperation argument,
+        bool extensionMethod,
+        int logicalParameterOrdinal)
+    {
+        var parameterOrdinal = extensionMethod ? logicalParameterOrdinal + 1 : logicalParameterOrdinal;
+        return argument.Parameter?.Ordinal == parameterOrdinal;
     }
 
     private static ImmutableHashSet<string> BuildLiveObsoleteAttributeNames(Compilation compilation)

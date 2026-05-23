@@ -113,6 +113,8 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("activity.SetTag(\"http.method\", \"GET\");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].");
     sb.AppendLine("activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.");
     sb.AppendLine("tags.Add(\"message.id\", \"42\");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.");
+    sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // OTSC0031 in a production resource payload.");
+    sb.AppendLine("new ActivityEvent(\"cache.prune\", tags: new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // OTSC0031 in event attribute payloads.");
     sb.AppendLine("meter.CreateHistogram<long>(\"system.memory.shared\"); // OTSC0030; use \"system.memory.linux.shared\".");
     sb.AppendLine("```");
 
