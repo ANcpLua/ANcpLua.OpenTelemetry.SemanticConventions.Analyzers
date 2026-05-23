@@ -111,6 +111,8 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("```csharp");
     sb.AppendLine("activity.SetTag(HttpAttributes.AttributeHttpMethod, \"GET\"); // OTSC0010 from live [Obsolete] metadata.");
     sb.AppendLine("activity.SetTag(\"http.method\", \"GET\");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].");
+    sb.AppendLine("activity.SetBaggage(\"http.method\", \"GET\");    // OTSC0012 in baggage-like key/value APIs.");
+    sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
     sb.AppendLine("activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.");

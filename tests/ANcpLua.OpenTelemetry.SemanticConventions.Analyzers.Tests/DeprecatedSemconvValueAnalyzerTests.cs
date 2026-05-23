@@ -34,6 +34,12 @@ public class DeprecatedSemconvValueAnalyzerTests
         public class FakeSpan
         {
             public FakeSpan SetTag(string key, object? value) => this;
+            public FakeSpan AddBaggage(string key, string? value) => this;
+        }
+
+        public sealed class ActivityTagsCollection
+        {
+            public void Add(string key, object? value) { }
         }
 
         public sealed class ResourceBuilder
@@ -109,6 +115,56 @@ public class DeprecatedSemconvValueAnalyzerTests
         await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task AddBaggage_DeprecatedValue_Reports_OTSC0014()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.AddBaggage("http.request.method", {|#0:"_LEGACY_GET"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityTagsCollection_Add_DeprecatedValue_Reports_OTSC0014()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ActivityTagsCollection tags)
+                {
+                    tags.Add("http.request.method", {|#0:"_LEGACY_GET"|});
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 
