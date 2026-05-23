@@ -27,6 +27,9 @@ public class DeprecatedSemconvValueAnalyzerTests
 
                     [System.Obsolete("Use the canonical RFC 9110 verb 'GET'.")]
                     public const string LegacyGet = "_LEGACY_GET";
+
+                    [System.Obsolete("Replaced by GET.")]
+                    public const string VeryLegacyGet = "__GET";
                 }
             }
         }
@@ -102,6 +105,43 @@ public class DeprecatedSemconvValueAnalyzerTests
         await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Exact_Replacement_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.SetTag("http.request.method", {|#0:"__GET"|});
+                }
+            }
+            """;
+
+        const string fixedCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.SetTag("http.request.method", "GET");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("__GET", "http.request.method", "Replaced by GET.");
+
+        await new CSharpCodeFixTest<DeprecatedSemconvValueAnalyzer, LiveSemconvMetadataCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
             ExpectedDiagnostics = { expected },
         }.RunAsync();
     }

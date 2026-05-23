@@ -124,6 +124,43 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
+    public async Task Exact_Replacement_CodeFix_Replaces_Only_Literal_Token()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.SetTag({|#0:"http.method"|}, "GET");
+                }
+            }
+            """;
+
+        const string fixedCode = SemconvFixture + """
+
+            class C
+            {
+                void M(FakeSpan s)
+                {
+                    s.SetTag("http.request.method", "GET");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpCodeFixTest<LiteralMatchesDeprecatedSemconvAnalyzer, LiveSemconvMetadataCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task TypedConstant_Skipped_By_OTSC0012()
     {
         // Typed constants are OTSC0010's job. OTSC0012 only fires on bare literals.

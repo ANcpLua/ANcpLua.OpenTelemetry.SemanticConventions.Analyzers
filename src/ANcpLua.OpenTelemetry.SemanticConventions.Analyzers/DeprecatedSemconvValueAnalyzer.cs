@@ -204,9 +204,16 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var properties = ImmutableDictionary<string, string?>.Empty;
+        if (SemconvCodeFixHelpers.TryExtractExactReplacement(message, out var replacement))
+        {
+            properties = properties.Add(SemconvCodeFixHelpers.ReplacementValueProperty, replacement);
+        }
+
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.DeprecatedSemconvValue,
             payload.ValueSyntax.GetLocation(),
+            properties,
             payload.Value,
             payload.Key,
             message));

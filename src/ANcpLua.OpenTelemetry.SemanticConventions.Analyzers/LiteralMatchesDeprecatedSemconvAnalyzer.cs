@@ -167,9 +167,16 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var properties = ImmutableDictionary<string, string?>.Empty;
+        if (SemconvCodeFixHelpers.TryExtractExactReplacement(deprecationMessage, out var replacement))
+        {
+            properties = properties.Add(SemconvCodeFixHelpers.ReplacementValueProperty, replacement);
+        }
+
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.LiteralMatchesDeprecatedSemconv,
             payload.KeySyntax.GetLocation(),
+            properties,
             payload.Key,
             deprecationMessage));
     }

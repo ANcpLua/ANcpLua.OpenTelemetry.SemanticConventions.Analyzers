@@ -52,6 +52,11 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
 
         var message = ExtractObsoleteMessage(obsolete);
         var displayName = $"{containingType.Name}.{field.Name}";
+        var properties = ImmutableDictionary<string, string?>.Empty;
+        if (SemconvCodeFixHelpers.TryExtractExactReplacement(message, out var replacement))
+        {
+            properties = properties.Add(SemconvCodeFixHelpers.ReplacementValueProperty, replacement);
+        }
 
         // Squiggle just the field name, not the full qualified expression.
         var location = operation.Syntax switch
@@ -63,6 +68,7 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.DeprecatedSemconvConstant,
             location,
+            properties,
             displayName,
             message));
     }

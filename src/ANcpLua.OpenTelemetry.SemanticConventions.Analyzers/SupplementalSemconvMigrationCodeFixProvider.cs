@@ -77,54 +77,7 @@ public sealed class SupplementalSemconvMigrationCodeFixProvider : CodeFixProvide
             return document;
         }
 
-        var replacementLiteral = CreateReplacementLiteral(literal, replacement);
+        var replacementLiteral = SemconvCodeFixHelpers.CreateReplacementLiteral(literal, replacement);
         return document.WithSyntaxRoot(root.ReplaceNode(literal, replacementLiteral));
-    }
-
-    private static LiteralExpressionSyntax CreateReplacementLiteral(
-        LiteralExpressionSyntax original,
-        string replacement)
-    {
-        var token = original.Token;
-        var text = token.Text;
-        var literalText = text.StartsWith("@\"", StringComparison.Ordinal)
-            ? "@\"" + replacement.Replace("\"", "\"\"") + "\""
-            : "\"" + EscapeStringLiteral(replacement) + "\"";
-
-        return SyntaxFactory.LiteralExpression(
-                SyntaxKind.StringLiteralExpression,
-                SyntaxFactory.Literal(token.LeadingTrivia, literalText, replacement, token.TrailingTrivia))
-            .WithTriviaFrom(original);
-    }
-
-    private static string EscapeStringLiteral(string value)
-    {
-        var builder = new System.Text.StringBuilder(value.Length + 8);
-        foreach (var ch in value)
-        {
-            switch (ch)
-            {
-                case '\\':
-                    builder.Append("\\\\");
-                    break;
-                case '"':
-                    builder.Append("\\\"");
-                    break;
-                case '\n':
-                    builder.Append("\\n");
-                    break;
-                case '\r':
-                    builder.Append("\\r");
-                    break;
-                case '\t':
-                    builder.Append("\\t");
-                    break;
-                default:
-                    builder.Append(ch);
-                    break;
-            }
-        }
-
-        return builder.ToString();
     }
 }

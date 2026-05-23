@@ -76,6 +76,43 @@ public class DeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
+    public async Task Exact_Replacement_CodeFix_Uses_Typed_Replacement_Constant()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M()
+                {
+                    var x = OpenTelemetry.SemanticConventions.Attributes.HttpAttributes.{|#0:AttributeHttpMethod|};
+                }
+            }
+            """;
+
+        const string fixedCode = SemconvFixture + """
+
+            class C
+            {
+                void M()
+                {
+                    var x = OpenTelemetry.SemanticConventions.Attributes.HttpAttributes.AttributeHttpRequestMethod;
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
+
+        await new CSharpCodeFixTest<DeprecatedSemconvAnalyzer, LiveSemconvMetadataCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Reference_To_Obsolete_NetAttribute_Reports_OTSC0010()
     {
         const string testCode = SemconvFixture + """
