@@ -30,6 +30,20 @@ internal static class TelemetryAttributePayloadDetection
             return;
         }
 
+        if (IsLoggerBeginScope(invocation)
+            && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var scopeStateArgument))
+        {
+            AnalyzePayload(scopeStateArgument.Value, report);
+            return;
+        }
+
+        if (IsLoggerLog(invocation)
+            && TryGetArgumentByNameOrOrdinal(invocation.Arguments, "state", 2, out var logStateArgument))
+        {
+            AnalyzePayload(logStateArgument.Value, report);
+            return;
+        }
+
         if (IsResourceBuilderAddAttributes(invocation)
             && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
         {
@@ -418,6 +432,12 @@ internal static class TelemetryAttributePayloadDetection
                 return true;
             }
 
+            if (argument.Parent is IInvocationOperation loggerInvocation
+                && IsLoggerPayloadArgument(loggerInvocation, argument))
+            {
+                return true;
+            }
+
             if (argument.Parent is IObjectCreationOperation objectCreation
                 && IsActivityEventTagsArgument(objectCreation, argument))
             {
@@ -441,6 +461,20 @@ internal static class TelemetryAttributePayloadDetection
         IsActivitySourceStartActivity(invocation)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 3);
+
+    private static bool IsLoggerPayloadArgument(
+        IInvocationOperation invocation,
+        IArgumentOperation argument)
+    {
+        if (IsLoggerBeginScope(invocation))
+        {
+            return IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0);
+        }
+
+        return IsLoggerLog(invocation)
+            && (string.Equals(argument.Parameter?.Name, "state", StringComparison.Ordinal)
+                || IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 2));
+    }
 
     private static bool IsKeyValuePairStringObject(ITypeSymbol? type)
     {
@@ -473,11 +507,22 @@ internal static class TelemetryAttributePayloadDetection
         invocation.TargetMethod.Name == "StartActivity"
         && invocation.TargetMethod.ContainingType.Name == "ActivitySource";
 
+    private static bool IsLoggerBeginScope(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "BeginScope"
+        && IsLoggerLike(invocation.TargetMethod.ContainingType);
+
+    private static bool IsLoggerLog(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "Log"
+        && IsLoggerLike(invocation.TargetMethod.ContainingType);
+
     private static bool IsMetricInstrument(ITypeSymbol? type) =>
         type?.Name is "Counter" or "Histogram" or "UpDownCounter";
 
     private static bool IsMetricMeasurementCreation(ITypeSymbol? type) =>
         type?.Name is "Measurement";
+
+    private static bool IsLoggerLike(ITypeSymbol? type) =>
+        type?.Name is "ILogger";
 }
 
 internal readonly struct TelemetryAttributePayloadLiteral

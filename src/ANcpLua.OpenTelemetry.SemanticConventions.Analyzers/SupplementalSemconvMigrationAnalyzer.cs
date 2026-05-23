@@ -174,6 +174,32 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        if (IsLoggerBeginScope(invocation)
+            && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var scopeStateArgument))
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                scopeStateArgument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+            return;
+        }
+
+        if (IsLoggerLog(invocation)
+            && TryGetArgumentByNameOrOrdinal(invocation.Arguments, "state", 2, out var logStateArgument))
+        {
+            AnalyzeTelemetryAttributePayload(
+                context,
+                logStateArgument.Value,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+            return;
+        }
+
         if (!IsResourceBuilderAddAttributes(invocation)
             || !TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
         {
@@ -794,6 +820,12 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 return true;
             }
 
+            if (argument.Parent is IInvocationOperation loggerInvocation
+                && IsLoggerPayloadArgument(loggerInvocation, argument))
+            {
+                return true;
+            }
+
             if (argument.Parent is IObjectCreationOperation objectCreation
                 && IsActivityEventTagsArgument(objectCreation, argument))
             {
@@ -817,6 +849,31 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         IsActivitySourceStartActivity(invocation)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 3);
+
+    private static bool IsLoggerPayloadArgument(
+        IInvocationOperation invocation,
+        IArgumentOperation argument)
+    {
+        if (IsLoggerBeginScope(invocation))
+        {
+            return IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0);
+        }
+
+        return IsLoggerLog(invocation)
+            && (string.Equals(argument.Parameter?.Name, "state", StringComparison.Ordinal)
+                || IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 2));
+    }
+
+    private static bool IsLoggerBeginScope(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "BeginScope"
+        && IsLoggerLike(invocation.TargetMethod.ContainingType);
+
+    private static bool IsLoggerLog(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "Log"
+        && IsLoggerLike(invocation.TargetMethod.ContainingType);
+
+    private static bool IsLoggerLike(ITypeSymbol? type) =>
+        type?.Name is "ILogger";
 
     private static bool TryGetAttributeValueMigration(
         string key,

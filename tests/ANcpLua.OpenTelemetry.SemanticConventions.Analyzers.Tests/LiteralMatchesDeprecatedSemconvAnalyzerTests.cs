@@ -60,6 +60,12 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         {
             public Measurement(T value, params KeyValuePair<string, object?>[] tags) { }
         }
+
+        public interface ILogger
+        {
+            void Log(string level, int eventId, IEnumerable<KeyValuePair<string, object?>> state, object? exception = null, object? formatter = null);
+            System.IDisposable? BeginScope(IEnumerable<KeyValuePair<string, object?>> state);
+        }
         """;
 
     [Fact]
@@ -326,6 +332,37 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
                 Measurement<long> M()
                 {
                     return new Measurement<long>(1, new KeyValuePair<string, object?>({|#0:"http.method"|}, "GET"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Logger_Log_State_DeprecatedLiteralKey_Reports_OTSC0012()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ILogger logger)
+                {
+                    logger.Log(
+                        "Information",
+                        0,
+                        new[]
+                        {
+                            new KeyValuePair<string, object?>({|#0:"http.method"|}, "GET"),
+                        });
                 }
             }
             """;
