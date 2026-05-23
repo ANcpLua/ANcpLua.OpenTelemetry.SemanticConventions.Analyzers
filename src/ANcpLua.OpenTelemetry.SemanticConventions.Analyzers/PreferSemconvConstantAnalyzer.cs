@@ -45,6 +45,9 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeObjectCreation(ctx, catalog),
             OperationKind.ObjectCreation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeAssignment(ctx, catalog),
+            OperationKind.SimpleAssignment);
     }
 
     private static Dictionary<string, string> BuildCatalog(Compilation compilation)
@@ -124,6 +127,16 @@ public sealed class PreferSemconvConstantAnalyzer : DiagnosticAnalyzer
 
         TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
             objectCreation,
+            payload => ReportIfKnownConstant(context, catalog, payload));
+    }
+
+    private static void AnalyzeAssignment(
+        OperationAnalysisContext context,
+        Dictionary<string, string> catalog)
+    {
+        var assignment = (ISimpleAssignmentOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeAssignment(
+            assignment,
             payload => ReportIfKnownConstant(context, catalog, payload));
     }
 

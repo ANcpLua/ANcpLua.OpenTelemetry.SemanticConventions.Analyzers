@@ -89,6 +89,16 @@ internal static class TelemetryAttributePayloadDetection
         }
     }
 
+    public static void AnalyzeAssignment(
+        ISimpleAssignmentOperation assignment,
+        Action<TelemetryAttributePayloadLiteral> report)
+    {
+        if (IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment))
+        {
+            AnalyzeIndexerAssignment(assignment, report);
+        }
+    }
+
     private static void AnalyzePayload(
         IOperation operation,
         Action<TelemetryAttributePayloadLiteral> report)
@@ -525,6 +535,30 @@ internal static class TelemetryAttributePayloadDetection
             }
         }
 
+        return false;
+    }
+
+    private static bool IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(ISimpleAssignmentOperation assignment)
+    {
+        var target = TagSetterDetection.UnwrapConversion(assignment.Target);
+        return target is IPropertyReferenceOperation propertyReference
+            && IsStringKeyDictionary(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType)
+            && TryGetLocalReference(propertyReference.Instance, out var local)
+            && LocalFlowsToKnownTelemetryAttributePayload(local, assignment);
+    }
+
+    private static bool TryGetLocalReference(
+        IOperation? operation,
+        [NotNullWhen(true)] out ILocalSymbol? local)
+    {
+        if (operation is not null
+            && TagSetterDetection.UnwrapConversion(operation) is ILocalReferenceOperation localReference)
+        {
+            local = localReference.Local;
+            return true;
+        }
+
+        local = null;
         return false;
     }
 

@@ -58,6 +58,9 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeObjectCreation(ctx, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues),
             OperationKind.ObjectCreation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeAssignment(ctx, legacyMode, liveObsoleteAttributeNames, liveObsoleteAttributeValues),
+            OperationKind.SimpleAssignment);
     }
 
     private static void AnalyzeInvocation(
@@ -236,7 +239,8 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
         ImmutableHashSet<string> liveObsoleteAttributeNames,
         ImmutableHashSet<string> liveObsoleteAttributeValues)
     {
-        var isProductionEmission = IsKnownProductionTagSetter(invocation);
+        var isProductionEmission = IsKnownProductionTagSetter(invocation)
+            || IsDictionaryAddOnLocalFlowingToTelemetry(invocation);
         var isAmbiguousPayload = isProductionEmission is false && IsAmbiguousAttributePayload(invocation);
         if (!isProductionEmission && !isAmbiguousPayload)
         {
@@ -271,6 +275,28 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             legacyMode,
             liveObsoleteAttributeValues,
             isProductionEmission);
+    }
+
+    private static void AnalyzeAssignment(
+        OperationAnalysisContext context,
+        SemconvLegacyMode legacyMode,
+        ImmutableHashSet<string> liveObsoleteAttributeNames,
+        ImmutableHashSet<string> liveObsoleteAttributeValues)
+    {
+        var assignment = (ISimpleAssignmentOperation)context.Operation;
+        if (SemconvIntentClassifier.IsCatalogSource(assignment)
+            || !IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(assignment))
+        {
+            return;
+        }
+
+        AnalyzeIndexerAssignmentPayload(
+            context,
+            assignment,
+            legacyMode,
+            liveObsoleteAttributeNames,
+            liveObsoleteAttributeValues,
+            isProductionEmission: true);
     }
 
     private static void AnalyzeMetricInstrumentName(
@@ -920,6 +946,38 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
             }
         }
 
+        return false;
+    }
+
+    private static bool IsDictionaryAddOnLocalFlowingToTelemetry(IInvocationOperation invocation)
+    {
+        return invocation.TargetMethod.Name == "Add"
+            && IsStringKeyDictionary(invocation.Instance?.Type ?? invocation.TargetMethod.ContainingType)
+            && TryGetLocalReference(invocation.Instance, out var local)
+            && LocalFlowsToKnownTelemetryAttributePayload(local, invocation);
+    }
+
+    private static bool IsDictionaryIndexerAssignmentOnLocalFlowingToTelemetry(ISimpleAssignmentOperation assignment)
+    {
+        var target = TagSetterDetection.UnwrapConversion(assignment.Target);
+        return target is IPropertyReferenceOperation propertyReference
+            && IsStringKeyDictionary(propertyReference.Instance?.Type ?? propertyReference.Property.ContainingType)
+            && TryGetLocalReference(propertyReference.Instance, out var local)
+            && LocalFlowsToKnownTelemetryAttributePayload(local, assignment);
+    }
+
+    private static bool TryGetLocalReference(
+        IOperation? operation,
+        [NotNullWhen(true)] out ILocalSymbol? local)
+    {
+        if (operation is not null
+            && TagSetterDetection.UnwrapConversion(operation) is ILocalReferenceOperation localReference)
+        {
+            local = localReference.Local;
+            return true;
+        }
+
+        local = null;
         return false;
     }
 
