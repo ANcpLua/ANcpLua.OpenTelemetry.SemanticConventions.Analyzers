@@ -18,6 +18,11 @@ internal static class TelemetryAttributePayloadDetection
             AnalyzeKeyValueInvocation(invocation, report);
         }
 
+        if (IsMetricMeasurementInvocation(invocation))
+        {
+            AnalyzeArgumentsAfterFirst(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, report);
+        }
+
         if (IsResourceBuilderAddAttributes(invocation)
             && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
         {
@@ -41,6 +46,11 @@ internal static class TelemetryAttributePayloadDetection
             && !IsInsideKnownTelemetryAttributePayload(objectCreation))
         {
             AnalyzeKeyValuePairCreation(objectCreation, report);
+        }
+
+        if (IsMetricMeasurementCreation(objectCreation.Type))
+        {
+            AnalyzeArgumentsAfterFirst(objectCreation.Arguments, extensionMethod: false, report);
         }
 
         if (IsActivityEventCreation(objectCreation.Type)
@@ -187,6 +197,26 @@ internal static class TelemetryAttributePayloadDetection
         report(new TelemetryAttributePayloadLiteral(key, keySyntax, keyIsBareLiteral, value, valueSyntax));
     }
 
+    private static void AnalyzeArgumentsAfterFirst(
+        ImmutableArray<IArgumentOperation> arguments,
+        bool extensionMethod,
+        Action<TelemetryAttributePayloadLiteral> report)
+    {
+        for (var i = 0; i < arguments.Length; i++)
+        {
+            var argument = arguments[i];
+            var logicalOrdinal = argument.Parameter is null
+                ? i
+                : argument.Parameter.Ordinal - (extensionMethod ? 1 : 0);
+            if (logicalOrdinal <= 0 && i == 0)
+            {
+                continue;
+            }
+
+            AnalyzePayload(argument.Value, report);
+        }
+    }
+
     private static bool TryGetKey(
         IOperation operation,
         [NotNullWhen(true)] out string? key,
@@ -300,6 +330,18 @@ internal static class TelemetryAttributePayloadDetection
         return argument.Parameter?.Ordinal == parameterOrdinal;
     }
 
+    private static bool IsAfterFirstLogicalArgument(
+        IArgumentOperation argument,
+        bool extensionMethod)
+    {
+        if (argument.Parameter is null)
+        {
+            return false;
+        }
+
+        return argument.Parameter.Ordinal - (extensionMethod ? 1 : 0) > 0;
+    }
+
     private static bool IsResourceBuilderAddAttributes(IInvocationOperation invocation)
     {
         if (invocation.TargetMethod.Name != "AddAttributes")
@@ -329,6 +371,10 @@ internal static class TelemetryAttributePayloadDetection
             && IsTelemetryTagCollection(invocation.Instance?.Type ?? invocation.TargetMethod.ContainingType);
     }
 
+    private static bool IsMetricMeasurementInvocation(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name is "Add" or "Record"
+        && IsMetricInstrument(invocation.TargetMethod.ContainingType);
+
     private static bool IsInsideKnownTelemetryAttributePayload(IOperation operation)
     {
         for (var current = operation.Parent; current is not null; current = current.Parent)
@@ -341,6 +387,20 @@ internal static class TelemetryAttributePayloadDetection
             if (argument.Parent is IInvocationOperation invocation
                 && IsResourceBuilderAddAttributes(invocation)
                 && IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IInvocationOperation metricInvocation
+                && IsMetricMeasurementInvocation(metricInvocation)
+                && IsAfterFirstLogicalArgument(argument, metricInvocation.TargetMethod.IsExtensionMethod))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IObjectCreationOperation metricMeasurement
+                && IsMetricMeasurementCreation(metricMeasurement.Type)
+                && IsAfterFirstLogicalArgument(argument, extensionMethod: false))
             {
                 return true;
             }
@@ -388,6 +448,12 @@ internal static class TelemetryAttributePayloadDetection
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
+
+    private static bool IsMetricInstrument(ITypeSymbol? type) =>
+        type?.Name is "Counter" or "Histogram" or "UpDownCounter";
+
+    private static bool IsMetricMeasurementCreation(ITypeSymbol? type) =>
+        type?.Name is "Measurement";
 }
 
 internal readonly struct TelemetryAttributePayloadLiteral

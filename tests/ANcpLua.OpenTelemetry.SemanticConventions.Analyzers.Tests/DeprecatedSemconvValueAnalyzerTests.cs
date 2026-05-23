@@ -51,6 +51,16 @@ public class DeprecatedSemconvValueAnalyzerTests
         {
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
+
+        public sealed class Counter<T>
+        {
+            public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
+        }
+
+        public readonly struct Measurement<T>
+        {
+            public Measurement(T value, params KeyValuePair<string, object?>[] tags) { }
+        }
         """;
 
     [Fact]
@@ -213,6 +223,56 @@ public class DeprecatedSemconvValueAnalyzerTests
                         {
                             { "http.request.method", {|#0:"_LEGACY_GET"|} },
                         });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task MetricCounter_Add_DeprecatedValue_Reports_OTSC0014()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(Counter<long> counter)
+                {
+                    counter.Add(1, new KeyValuePair<string, object?>("http.request.method", {|#0:"_LEGACY_GET"|}));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Measurement_Tags_DeprecatedValue_Reports_OTSC0014()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                Measurement<long> M()
+                {
+                    return new Measurement<long>(1, new KeyValuePair<string, object?>("http.request.method", {|#0:"_LEGACY_GET"|}));
                 }
             }
             """;

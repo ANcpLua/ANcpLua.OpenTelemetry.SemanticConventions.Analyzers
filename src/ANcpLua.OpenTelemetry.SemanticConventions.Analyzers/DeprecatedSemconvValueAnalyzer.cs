@@ -4,8 +4,8 @@
 namespace OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0014: Flags <c>SetTag(name, value)</c> callsites where the value argument
-/// is a constant string that matches a deprecated member of the corresponding
+/// OTSC0014: Flags telemetry attribute payloads where the value is a constant
+/// string that matches a deprecated member of the corresponding
 /// <c>*Values</c> nested class on the SemConv attribute type.
 /// </summary>
 /// <remarks>

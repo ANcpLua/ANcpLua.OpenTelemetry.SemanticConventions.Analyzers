@@ -30,6 +30,21 @@ public class SupplementalSemconvMigrationAnalyzerTests
             public void CreateHistogram<T>(string name) { }
         }
 
+        public sealed class Counter<T>
+        {
+            public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
+        }
+
+        public sealed class Histogram<T>
+        {
+            public void Record(T value, params KeyValuePair<string, object?>[] tags) { }
+        }
+
+        public readonly struct Measurement<T>
+        {
+            public Measurement(T value, params KeyValuePair<string, object?>[] tags) { }
+        }
+
         public sealed class ResourceBuilder
         {
             public ResourceBuilder AddAttributes(IEnumerable<KeyValuePair<string, object?>> attributes) => this;
@@ -561,6 +576,78 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
+    public async Task MetricCounter_Add_Tag_Payload_Reports_Production_Manual_Review()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(Counter<long> counter)
+                {
+                    counter.Add(1, new KeyValuePair<string, object?>({|#0:"message.id"|}, "42"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Histogram_Record_Tag_Value_Reports_Production_Error()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(Histogram<long> histogram)
+                {
+                    histogram.Record(1, new KeyValuePair<string, object?>("cloud.platform", {|#0:"azure_aks"|}));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Measurement_Tag_Payload_Reports_Production_Manual_Review()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                Measurement<long> M()
+                {
+                    return new Measurement<long>(1, new KeyValuePair<string, object?>({|#0:"message.id"|}, "42"));
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+            .WithLocation(0);
+
+        await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Exact_Rename_CodeFix_Replaces_Only_Literal_Token()
     {
         const string testCode = FakeTelemetry + """
@@ -581,6 +668,42 @@ public class SupplementalSemconvMigrationAnalyzerTests
                 void M(Meter meter)
                 {
                     meter.CreateHistogram<long>("system.memory.linux.shared");
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+            .WithLocation(0);
+
+        await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
+        {
+            TestCode = testCode,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Metric_Tag_Exact_Value_CodeFix_Replaces_Only_Value_Literal()
+    {
+        const string testCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(Histogram<long> histogram)
+                {
+                    histogram.Record(1, new KeyValuePair<string, object?>("cloud.platform", {|#0:"azure_aks"|}));
+                }
+            }
+            """;
+
+        const string fixedCode = FakeTelemetry + """
+
+            class C
+            {
+                void M(Histogram<long> histogram)
+                {
+                    histogram.Record(1, new KeyValuePair<string, object?>("cloud.platform", "azure.aks"));
                 }
             }
             """;
