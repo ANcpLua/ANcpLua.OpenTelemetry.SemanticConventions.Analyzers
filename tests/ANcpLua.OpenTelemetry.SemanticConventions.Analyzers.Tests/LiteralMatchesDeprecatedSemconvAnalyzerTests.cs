@@ -273,6 +273,36 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
+    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    var tags = new Dictionary<string, object?>
+                    {
+                        { {|#0:"http.method"|}, "GET" },
+                    };
+
+                    source.StartActivity("GET /users", tags: tags);
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Payload_TypedConstantKey_Remains_Skipped_By_OTSC0012()
     {
         const string testCode = SemconvFixture + """
