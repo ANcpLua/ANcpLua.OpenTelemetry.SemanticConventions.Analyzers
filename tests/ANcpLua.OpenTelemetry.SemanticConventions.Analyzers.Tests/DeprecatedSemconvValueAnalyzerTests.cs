@@ -11,6 +11,8 @@ namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
 public class DeprecatedSemconvValueAnalyzerTests
 {
     private const string SemconvFixture = """
+        using System.Collections.Generic;
+
         #pragma warning disable CS0618
         namespace OpenTelemetry.SemanticConventions
         {
@@ -32,6 +34,16 @@ public class DeprecatedSemconvValueAnalyzerTests
         public class FakeSpan
         {
             public FakeSpan SetTag(string key, object? value) => this;
+        }
+
+        public sealed class ResourceBuilder
+        {
+            public ResourceBuilder AddAttributes(IEnumerable<KeyValuePair<string, object?>> attributes) => this;
+        }
+
+        public readonly struct ActivityEvent
+        {
+            public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
         """;
 
@@ -97,6 +109,66 @@ public class DeprecatedSemconvValueAnalyzerTests
         await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ResourceBuilder_AddAttributes_DeprecatedValue_Reports_OTSC0014()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ResourceBuilder resourceBuilder)
+                {
+                    resourceBuilder.AddAttributes(new[]
+                    {
+                        new KeyValuePair<string, object?>(
+                            OpenTelemetry.SemanticConventions.HttpAttributes.AttributeHttpRequestMethod,
+                            {|#0:"_LEGACY_GET"|}),
+                    });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityEvent_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                ActivityEvent Create()
+                {
+                    return new ActivityEvent(
+                        "legacy.event",
+                        tags: new Dictionary<string, object?>
+                        {
+                            { "http.request.method", {|#0:"_LEGACY_GET"|} },
+                        });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 }

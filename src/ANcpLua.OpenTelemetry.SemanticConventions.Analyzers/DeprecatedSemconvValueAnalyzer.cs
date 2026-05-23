@@ -44,6 +44,9 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
         context.RegisterOperationAction(
             ctx => AnalyzeInvocation(ctx, map),
             OperationKind.Invocation);
+        context.RegisterOperationAction(
+            ctx => AnalyzeObjectCreation(ctx, map),
+            OperationKind.ObjectCreation);
     }
 
     private static Dictionary<(string AttrName, string Value), string> BuildValueDeprecationMap(Compilation compilation)
@@ -148,34 +151,38 @@ public sealed class DeprecatedSemconvValueAnalyzer : DiagnosticAnalyzer
         Dictionary<(string AttrName, string Value), string> map)
     {
         var invocation = (IInvocationOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeInvocation(
+            invocation,
+            payload => ReportIfDeprecated(context, map, payload));
+    }
 
-        if (!TagSetterDetection.IsTagSetterInvocation(invocation)
-            || !TagSetterDetection.TryGetTagSetterKeyArgument(invocation, out var keyArgument)
-            || !TagSetterDetection.TryGetTagSetterValueArgument(invocation, out var valueArgument))
-        {
-            return;
-        }
+    private static void AnalyzeObjectCreation(
+        OperationAnalysisContext context,
+        Dictionary<(string AttrName, string Value), string> map)
+    {
+        var objectCreation = (IObjectCreationOperation)context.Operation;
+        TelemetryAttributePayloadDetection.AnalyzeObjectCreation(
+            objectCreation,
+            payload => ReportIfDeprecated(context, map, payload));
+    }
 
-        if (!TagSetterDetection.TryGetStringConstant(keyArgument.Value, out var attrName))
-        {
-            return;
-        }
-
-        if (!TagSetterDetection.TryGetStringConstant(valueArgument.Value, out var value))
-        {
-            return;
-        }
-
-        if (!map.TryGetValue((attrName, value), out var message))
+    private static void ReportIfDeprecated(
+        OperationAnalysisContext context,
+        Dictionary<(string AttrName, string Value), string> map,
+        TelemetryAttributePayloadLiteral payload)
+    {
+        if (payload.Value is null
+            || payload.ValueSyntax is null
+            || !map.TryGetValue((payload.Key, payload.Value), out var message))
         {
             return;
         }
 
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.DeprecatedSemconvValue,
-            valueArgument.Syntax.GetLocation(),
-            value,
-            attrName,
+            payload.ValueSyntax.GetLocation(),
+            payload.Value,
+            payload.Key,
             message));
     }
 }

@@ -41,6 +41,8 @@ This package analyzes OpenTelemetry semantic-convention usage in C# consumers. T
 ```csharp
 activity.SetTag(HttpAttributes.AttributeHttpMethod, "GET"); // OTSC0010 from live [Obsolete] metadata.
 activity.SetTag("http.method", "GET");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].
+resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["http.method"] = "GET" }); // OTSC0012 from live metadata in payloads.
+new ActivityEvent("legacy.event", tags: new Dictionary<string, object?> { ["http.request.method"] = "_LEGACY_GET" }); // OTSC0014 from live value metadata.
 activity.SetTag("error.message", message);      // OTSC0031 because the replacement is domain-specific.
 tags.Add("message.id", "42");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["message.id"] = "42" }); // OTSC0031 in a production resource payload.
