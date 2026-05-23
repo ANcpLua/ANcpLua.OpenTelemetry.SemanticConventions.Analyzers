@@ -23,6 +23,13 @@ internal static class TelemetryAttributePayloadDetection
             AnalyzeArgumentsAfterFirst(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, report);
         }
 
+        if (IsActivitySourceStartActivity(invocation)
+            && TryGetArgumentByNameOrOrdinal(invocation.Arguments, "tags", 3, out var startActivityTagsArgument))
+        {
+            AnalyzePayload(startActivityTagsArgument.Value, report);
+            return;
+        }
+
         if (IsResourceBuilderAddAttributes(invocation)
             && TryGetArgumentByOrdinal(invocation.Arguments, invocation.TargetMethod.IsExtensionMethod, 0, out var attributesArgument))
         {
@@ -405,6 +412,12 @@ internal static class TelemetryAttributePayloadDetection
                 return true;
             }
 
+            if (argument.Parent is IInvocationOperation startActivityInvocation
+                && IsActivitySourceTagsArgument(startActivityInvocation, argument))
+            {
+                return true;
+            }
+
             if (argument.Parent is IObjectCreationOperation objectCreation
                 && IsActivityEventTagsArgument(objectCreation, argument))
             {
@@ -421,6 +434,13 @@ internal static class TelemetryAttributePayloadDetection
         IsActivityEventCreation(objectCreation.Type)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 2);
+
+    private static bool IsActivitySourceTagsArgument(
+        IInvocationOperation invocation,
+        IArgumentOperation argument) =>
+        IsActivitySourceStartActivity(invocation)
+        && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
+            || argument.Parameter?.Ordinal == 3);
 
     private static bool IsKeyValuePairStringObject(ITypeSymbol? type)
     {
@@ -448,6 +468,10 @@ internal static class TelemetryAttributePayloadDetection
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
+
+    private static bool IsActivitySourceStartActivity(IInvocationOperation invocation) =>
+        invocation.TargetMethod.Name == "StartActivity"
+        && invocation.TargetMethod.ContainingType.Name == "ActivitySource";
 
     private static bool IsMetricInstrument(ITypeSymbol? type) =>
         type?.Name is "Counter" or "Histogram" or "UpDownCounter";

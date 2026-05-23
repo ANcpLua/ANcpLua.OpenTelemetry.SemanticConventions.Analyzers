@@ -31,6 +31,11 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             public FakeSpan SetBaggage(string key, string? value) => this;
         }
 
+        public sealed class ActivitySource
+        {
+            public FakeSpan? StartActivity(string name, object? kind = null, object? parent = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) => null;
+        }
+
         public sealed class TagList
         {
             public void Add(string key, object? value) { }
@@ -215,6 +220,36 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
                         tags: new Dictionary<string, object?>
                         {
                             { {|#0:"http.method"|}, "GET" },
+                        });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("http.method", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<LiteralMatchesDeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivitySource_StartActivity_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                void M(ActivitySource source)
+                {
+                    source.StartActivity(
+                        "GET /users",
+                        tags: new[]
+                        {
+                            new KeyValuePair<string, object?>({|#0:"http.method"|}, "GET"),
                         });
                 }
             }
