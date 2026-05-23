@@ -314,7 +314,7 @@ static void AppendCompletionAudit(
     sb.AppendLine($"| Use supplemental diagnostics only where metadata is insufficient | `{supplementalCount}` curated rows are supplemental diagnostics: `{exactCount}` exact replacement, `{manualCount}` manual/context-sensitive, `{removedCount}` removed/no-replacement, `{guidanceCount}` guidance-only. |");
     sb.AppendLine($"| Keep attribute-value fallback separate from the curated name/key/event/metric count | `{valueEntries.Length}` supplemental attribute-value rows are outside the 156-entry inventory and are used only when live value metadata is absent. |");
     sb.AppendLine("| Keep severity context-sensitive | `OTSC0030` is production exact replacement error, `OTSC0031` is production manual-review warning, and `OTSC0032` is compatibility/test/generated info. |");
-    sb.AppendLine("| Keep code fixes exact-only | `SupplementalSemconvMigrationCodeFixProvider` registers fixes only when diagnostic properties mark `ExactRename` or `ExactValueRename` and provide one replacement literal. |");
+    sb.AppendLine("| Keep code fixes exact-only | `LiveSemconvMetadataCodeFixProvider` registers fixes only when live `[Obsolete]` metadata exposes an exact replacement; `SupplementalSemconvMigrationCodeFixProvider` registers fixes only when diagnostic properties mark `ExactRename` or `ExactValueRename` and provide one replacement literal. |");
     sb.AppendLine("| Keep old-schema compatibility non-error | Test, fixture, migration, compatibility, translator, generated, catalog, and explicit older schema URL contexts select `OTSC0032`. |");
     sb.AppendLine();
     sb.AppendLine("| Migration kind | Curated count |");
