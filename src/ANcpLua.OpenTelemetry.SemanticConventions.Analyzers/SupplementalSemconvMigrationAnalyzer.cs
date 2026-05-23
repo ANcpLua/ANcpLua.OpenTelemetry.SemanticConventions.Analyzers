@@ -116,6 +116,20 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
                 isProductionEmission: false);
         }
 
+        if (objectCreation.Initializer is not null
+            && IsStringKeyDictionary(objectCreation.Type)
+            && IsInsideLocalDeclarationInitializerUsedAsTelemetryPayload(objectCreation))
+        {
+            AnalyzeObjectInitializer(
+                context,
+                objectCreation.Initializer,
+                legacyMode,
+                liveObsoleteAttributeNames,
+                liveObsoleteAttributeValues,
+                isProductionEmission: true);
+            return;
+        }
+
         if (IsActivityEventCreation(objectCreation.Type)
             && TryGetArgumentByOrdinal(objectCreation.Arguments, extensionMethod: false, 0, out var nameArgument)
             && TryGetBareLiteral(nameArgument.Value, out var eventName, out var eventNameSyntax))
@@ -785,6 +799,11 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
     private static bool IsInsideKnownTelemetryAttributePayload(IOperation operation)
     {
+        if (IsInsideLocalDeclarationInitializerUsedAsTelemetryPayload(operation))
+        {
+            return true;
+        }
+
         for (var current = operation.Parent; current is not null; current = current.Parent)
         {
             if (current is not IArgumentOperation argument)
@@ -835,6 +854,78 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
         return false;
     }
+
+    private static bool IsInsideLocalDeclarationInitializerUsedAsTelemetryPayload(IOperation operation)
+    {
+        if (!TryGetEnclosingLocalInitializer(operation, out var local))
+        {
+            return false;
+        }
+
+        return LocalFlowsToKnownTelemetryAttributePayload(local, operation);
+    }
+
+    private static bool TryGetEnclosingLocalInitializer(
+        IOperation operation,
+        [NotNullWhen(true)] out ILocalSymbol? local)
+    {
+        for (var current = operation.Parent; current is not null; current = current.Parent)
+        {
+            if (current is IVariableInitializerOperation
+                && current.Parent is IVariableDeclaratorOperation { Symbol: ILocalSymbol localSymbol })
+            {
+                local = localSymbol;
+                return true;
+            }
+        }
+
+        local = null;
+        return false;
+    }
+
+    private static bool LocalFlowsToKnownTelemetryAttributePayload(
+        ILocalSymbol local,
+        IOperation operation)
+    {
+        var root = operation;
+        while (root.Parent is not null)
+        {
+            root = root.Parent;
+        }
+
+        foreach (var descendant in Microsoft.CodeAnalysis.Operations.OperationExtensions.DescendantsAndSelf(root))
+        {
+            if (descendant is not IArgumentOperation argument
+                || !IsLocalReference(argument.Value, local))
+            {
+                continue;
+            }
+
+            if (argument.Parent is IInvocationOperation invocation
+                && ((IsResourceBuilderAddAttributes(invocation)
+                        && IsLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod, 0))
+                    || (invocation.TargetMethod.Name is "Add" or "Record"
+                        && IsMetricInstrument(invocation.TargetMethod.ContainingType)
+                        && IsAfterFirstLogicalArgument(argument, invocation.TargetMethod.IsExtensionMethod))
+                    || IsActivitySourceTagsArgument(invocation, argument)
+                    || IsLoggerPayloadArgument(invocation, argument)))
+            {
+                return true;
+            }
+
+            if (argument.Parent is IObjectCreationOperation objectCreation
+                && IsActivityEventTagsArgument(objectCreation, argument))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLocalReference(IOperation operation, ILocalSymbol local) =>
+        TagSetterDetection.UnwrapConversion(operation) is ILocalReferenceOperation localReference
+        && SymbolEqualityComparer.Default.Equals(localReference.Local, local);
 
     private static bool IsActivityEventTagsArgument(
         IObjectCreationOperation objectCreation,
