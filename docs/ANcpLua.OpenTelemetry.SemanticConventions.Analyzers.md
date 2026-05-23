@@ -43,6 +43,7 @@ activity.SetTag(HttpAttributes.AttributeHttpMethod, "GET"); // OTSC0010 from liv
 activity.SetTag("http.method", "GET");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].
 activity.SetBaggage("http.method", "GET");    // OTSC0012 in baggage-like key/value APIs.
 tagList.Add("http.method", "GET");            // OTSC0012 in TagList/ActivityTagsCollection payloads.
+activityTags["message.id"] = "42";            // OTSC0031 in ActivityTagsCollection indexer payloads.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["http.method"] = "GET" }); // OTSC0012 from live metadata in payloads.
 activitySource.StartActivity("GET /users", tags: new[] { new KeyValuePair<string, object?>("http.method", "GET") }); // OTSC0012 in span-start tag payloads.
 activitySource.StartActivity("GET /users", tags: [new KeyValuePair<string, object?>("message.id", "42")]); // OTSC0031 in C# collection-expression payloads.
