@@ -11,8 +11,14 @@ internal static class SemconvMigrationCatalog
 
     public static ImmutableArray<SemconvMigrationCatalogEntry> Entries { get; } = BuildEntries();
 
+    public static ImmutableArray<SemconvMigrationCatalogEntry> SupplementalAttributeValueEntries { get; } =
+        BuildSupplementalAttributeValueEntries();
+
     private static readonly ImmutableDictionary<string, SemconvMigrationCatalogEntry> s_entriesByOldName =
         BuildEntriesByOldName(Entries);
+
+    private static readonly ImmutableDictionary<string, SemconvMigrationCatalogEntry> s_attributeValueEntriesByOldName =
+        BuildEntriesByOldName(SupplementalAttributeValueEntries);
 
     private static readonly ImmutableArray<SemconvMigrationCatalogEntry> s_wildcardEntries =
         BuildWildcardEntries(Entries);
@@ -41,6 +47,21 @@ internal static class SemconvMigrationCatalog
         return false;
     }
 
+    public static bool TryGetAttributeValueMigration(
+        string attributeName,
+        string attributeValue,
+        out SemconvMigrationCatalogEntry entry)
+    {
+        var key = attributeName + "=" + attributeValue;
+        if (s_attributeValueEntriesByOldName.TryGetValue(key, out entry))
+        {
+            return true;
+        }
+
+        entry = default;
+        return false;
+    }
+
     public static bool IsSupplementalDiagnosticEntry(SemconvMigrationCatalogEntry entry) =>
         entry.MigrationKind != SemconvMigrationKind.DeprecatedButGenerated
         && entry.Kind != SemconvMigrationItemKind.GuidanceOnly;
@@ -56,12 +77,7 @@ internal static class SemconvMigrationCatalog
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var entry in Entries)
         {
-            Require(entry.OldName, nameof(entry.OldName), entry);
-            Require(entry.Signal, nameof(entry.Signal), entry);
-            Require(entry.Domain, nameof(entry.Domain), entry);
-            Require(entry.SinceVersion, nameof(entry.SinceVersion), entry);
-            Require(entry.ChangelogVersion, nameof(entry.ChangelogVersion), entry);
-            Require(entry.ChangelogEvidence, nameof(entry.ChangelogEvidence), entry);
+            RequireCompleteEntry(entry);
 
             if (!seen.Add(entry.OldName))
             {
@@ -71,6 +87,22 @@ internal static class SemconvMigrationCatalog
             if (entry.HasExactReplacement && entry.ReplacementNames.Length != 1)
             {
                 throw new InvalidOperationException($"Exact migration '{entry.OldName}' must have one replacement.");
+            }
+        }
+
+        seen.Clear();
+        foreach (var entry in SupplementalAttributeValueEntries)
+        {
+            RequireCompleteEntry(entry);
+
+            if (entry.Kind != SemconvMigrationItemKind.AttributeValue)
+            {
+                throw new InvalidOperationException($"Supplemental value entry '{entry.OldName}' must be an AttributeValue.");
+            }
+
+            if (!seen.Add(entry.OldName))
+            {
+                throw new InvalidOperationException($"Duplicate supplemental value migration key '{entry.OldName}'.");
             }
         }
     }
@@ -91,6 +123,21 @@ internal static class SemconvMigrationCatalog
         }
 
         builder.Add(CreateGenAiChatHistoryEventEntry());
+        return builder.ToImmutable();
+    }
+
+    private static ImmutableArray<SemconvMigrationCatalogEntry> BuildSupplementalAttributeValueEntries()
+    {
+        var builder = ImmutableArray.CreateBuilder<SemconvMigrationCatalogEntry>();
+
+        foreach (var entry in OpenTelemetryDeprecatedSemconvCatalog.Entries)
+        {
+            if (entry.Kind == SemconvMigrationItemKind.AttributeValue)
+            {
+                builder.Add(Normalize(entry));
+            }
+        }
+
         return builder.ToImmutable();
     }
 
@@ -249,5 +296,15 @@ internal static class SemconvMigrationCatalog
         {
             throw new InvalidOperationException($"Catalog entry '{entry.OldName}' has empty {propertyName}.");
         }
+    }
+
+    private static void RequireCompleteEntry(SemconvMigrationCatalogEntry entry)
+    {
+        Require(entry.OldName, nameof(entry.OldName), entry);
+        Require(entry.Signal, nameof(entry.Signal), entry);
+        Require(entry.Domain, nameof(entry.Domain), entry);
+        Require(entry.SinceVersion, nameof(entry.SinceVersion), entry);
+        Require(entry.ChangelogVersion, nameof(entry.ChangelogVersion), entry);
+        Require(entry.ChangelogEvidence, nameof(entry.ChangelogEvidence), entry);
     }
 }

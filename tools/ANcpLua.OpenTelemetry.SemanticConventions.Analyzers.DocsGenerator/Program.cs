@@ -45,6 +45,7 @@ static string GenerateMarkdown(string repoRoot)
     var fixableIds = GetFixableDiagnosticIds();
     SemconvMigrationCatalog.Validate();
     var entries = SemconvMigrationCatalog.Entries;
+    var valueEntries = SemconvMigrationCatalog.SupplementalAttributeValueEntries;
     var metadataCount = Count(entries, entry => entry.MigrationKind == SemconvMigrationKind.DeprecatedButGenerated);
     var supplementalCount = Count(entries, SemconvMigrationCatalog.IsSupplementalDiagnosticEntry);
     var exactCount = Count(entries, entry => SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry)
@@ -54,6 +55,9 @@ static string GenerateMarkdown(string repoRoot)
     var removedCount = Count(entries, entry => SemconvMigrationCatalog.IsSupplementalDiagnosticEntry(entry)
         && entry.MigrationKind == SemconvMigrationKind.RemovedNoReplacement);
     var guidanceCount = Count(entries, entry => entry.Kind == SemconvMigrationItemKind.GuidanceOnly);
+    var exactValueCount = Count(valueEntries, entry => entry.MigrationKind == SemconvMigrationKind.ExactValueRename);
+    var removedValueCount = Count(valueEntries, entry => entry.MigrationKind == SemconvMigrationKind.RemovedNoReplacement);
+    var manualValueCount = Count(valueEntries, entry => entry.MigrationKind == SemconvMigrationKind.ManualReview);
 
     var sb = new StringBuilder();
     sb.AppendLine("# ANcpLua.OpenTelemetry.SemanticConventions.Analyzers");
@@ -91,7 +95,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("## Severity Policy");
     sb.AppendLine();
     sb.AppendLine("- `OTSC0010`, `OTSC0012`, and `OTSC0014` read `[Obsolete]` metadata from the referenced semantic-conventions assembly and keep their descriptor severities.");
-    sb.AppendLine("- `OTSC0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement.");
+    sb.AppendLine("- `OTSC0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement, including exact attribute-value replacements when live metadata is absent.");
     sb.AppendLine("- `OTSC0031` is used for context-sensitive migrations, removed/no-replacement entries, guidance-only cases, ambiguous payload dictionaries, and `compatibility` mode downgrades.");
     sb.AppendLine("- `OTSC0032` is used for tests, fixtures, snapshots, migration maps, schema translators, compatibility shims, generated sources, and catalog-like code.");
     sb.AppendLine("- Generated semconv constant libraries may intentionally retain deprecated constants. Their existence is not itself a package bug.");
@@ -115,6 +119,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
+    sb.AppendLine("activity.SetTag(\"cloud.platform\", \"azure_aks\"); // OTSC0030 supplemental value fallback when live value metadata is absent.");
     sb.AppendLine("activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.");
     sb.AppendLine("tags.Add(\"message.id\", \"42\");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.");
     sb.AppendLine("resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // OTSC0031 in a production resource payload.");
@@ -126,6 +131,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("## Curated Migration Inventory Summary");
     sb.AppendLine();
     sb.AppendLine($"Curated changelog mentions: {entries.Length}. Live metadata rows: {metadataCount}. Supplemental diagnostic rows: {supplementalCount}. Exact supplemental replacements: {exactCount}. Manual/context-sensitive supplemental rows: {manualCount}. Removed/no-replacement supplemental rows: {removedCount}. Guidance-only rows: {guidanceCount}.");
+    sb.AppendLine($"Supplemental attribute-value fallback rows: {valueEntries.Length}. Exact value replacements: {exactValueCount}. Manual value rows: {manualValueCount}. Removed/no-replacement value rows: {removedValueCount}. These rows are used only when the same key/value is not covered by live `[Obsolete]` metadata from the referenced package.");
     sb.AppendLine();
     sb.AppendLine("| Version | Domain | Total | Live metadata | Supplemental | Exact supplemental | Manual/context | Removed/no replacement |");
     sb.AppendLine("| -- | -- | --: | --: | --: | --: | --: | --: |");
@@ -176,6 +182,32 @@ static string GenerateMarkdown(string repoRoot)
         sb.Append(entry.Domain);
         sb.Append(" | ");
         AppendEscapedCell(sb, string.IsNullOrEmpty(entry.SinceVersion) ? "-" : entry.SinceVersion);
+        sb.Append(" | ");
+        sb.Append(entry.MigrationKind);
+        sb.Append(" | ");
+        AppendEscapedCell(sb, entry.ReplacementNames.Length == 0 ? "-" : string.Join(", ", entry.ReplacementNames.Select(name => "`" + name + "`")));
+        sb.Append(" | ");
+        AppendEscapedCell(sb, entry.ChangelogEvidence);
+        sb.AppendLine(" |");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("## Supplemental Attribute Value Fallback");
+    sb.AppendLine();
+    sb.AppendLine("These value rows are intentionally separate from the 156-entry name/key/event/metric inventory. `OTSC0014` remains primary when the referenced package exposes `[Obsolete]` value constants; the supplemental analyzer uses this table only when live value metadata is absent.");
+    sb.AppendLine();
+    sb.AppendLine("| Old value | Signal | Domain | Migration | Replacement | Evidence |");
+    sb.AppendLine("| -- | -- | -- | -- | -- | -- |");
+    foreach (var entry in valueEntries
+        .OrderBy(entry => entry.Domain, StringComparer.Ordinal)
+        .ThenBy(entry => entry.OldName, StringComparer.Ordinal))
+    {
+        sb.Append("| `");
+        sb.Append(entry.OldName);
+        sb.Append("` | ");
+        sb.Append(entry.Signal);
+        sb.Append(" | ");
+        sb.Append(entry.Domain);
         sb.Append(" | ");
         sb.Append(entry.MigrationKind);
         sb.Append(" | ");

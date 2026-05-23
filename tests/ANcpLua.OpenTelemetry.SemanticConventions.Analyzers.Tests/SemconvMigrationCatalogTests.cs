@@ -39,4 +39,28 @@ public class SemconvMigrationCatalogTests
         Assert.Equal("event.gen_ai.*", wildcardEntry.OldName);
         Assert.Equal(SemconvMigrationKind.ContextSensitive, wildcardEntry.MigrationKind);
     }
+
+    [Fact]
+    public void Catalog_Exposes_Supplemental_Value_Lookup_Outside_Curated_Name_Count()
+    {
+        Assert.DoesNotContain(
+            SemconvMigrationCatalog.Entries,
+            entry => entry.Kind == SemconvMigrationItemKind.AttributeValue);
+        Assert.Equal(21, SemconvMigrationCatalog.SupplementalAttributeValueEntries.Length);
+
+        Assert.True(SemconvMigrationCatalog.TryGetAttributeValueMigration(
+            "cloud.platform",
+            "azure_aks",
+            out var exactValueEntry));
+        Assert.Equal("cloud.platform=azure_aks", exactValueEntry.OldName);
+        Assert.Equal(SemconvMigrationItemKind.AttributeValue, exactValueEntry.Kind);
+        Assert.Equal(SemconvMigrationKind.ExactValueRename, exactValueEntry.MigrationKind);
+        Assert.Equal("azure.aks", Assert.Single(exactValueEntry.ReplacementNames));
+
+        Assert.True(SemconvMigrationCatalog.TryGetAttributeValueMigration(
+            "db.system",
+            "coldfusion",
+            out var removedValueEntry));
+        Assert.Equal(SemconvMigrationKind.RemovedNoReplacement, removedValueEntry.MigrationKind);
+    }
 }

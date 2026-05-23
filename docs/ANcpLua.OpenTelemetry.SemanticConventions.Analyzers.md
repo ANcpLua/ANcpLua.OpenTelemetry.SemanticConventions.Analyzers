@@ -23,7 +23,7 @@ This package analyzes OpenTelemetry semantic-convention usage in C# consumers. T
 ## Severity Policy
 
 - `OTSC0010`, `OTSC0012`, and `OTSC0014` read `[Obsolete]` metadata from the referenced semantic-conventions assembly and keep their descriptor severities.
-- `OTSC0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement.
+- `OTSC0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement, including exact attribute-value replacements when live metadata is absent.
 - `OTSC0031` is used for context-sensitive migrations, removed/no-replacement entries, guidance-only cases, ambiguous payload dictionaries, and `compatibility` mode downgrades.
 - `OTSC0032` is used for tests, fixtures, snapshots, migration maps, schema translators, compatibility shims, generated sources, and catalog-like code.
 - Generated semconv constant libraries may intentionally retain deprecated constants. Their existence is not itself a package bug.
@@ -45,6 +45,7 @@ activity.SetBaggage("http.method", "GET");    // OTSC0012 in baggage-like key/va
 tagList.Add("http.method", "GET");            // OTSC0012 in TagList/ActivityTagsCollection payloads.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["http.method"] = "GET" }); // OTSC0012 from live metadata in payloads.
 new ActivityEvent("legacy.event", tags: new Dictionary<string, object?> { ["http.request.method"] = "_LEGACY_GET" }); // OTSC0014 from live value metadata.
+activity.SetTag("cloud.platform", "azure_aks"); // OTSC0030 supplemental value fallback when live value metadata is absent.
 activity.SetTag("error.message", message);      // OTSC0031 because the replacement is domain-specific.
 tags.Add("message.id", "42");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.
 resourceBuilder.AddAttributes(new Dictionary<string, object?> { ["message.id"] = "42" }); // OTSC0031 in a production resource payload.
@@ -55,6 +56,7 @@ meter.CreateHistogram<long>("system.memory.shared"); // OTSC0030; use "system.me
 ## Curated Migration Inventory Summary
 
 Curated changelog mentions: 156. Live metadata rows: 105. Supplemental diagnostic rows: 51. Exact supplemental replacements: 1. Manual/context-sensitive supplemental rows: 26. Removed/no-replacement supplemental rows: 24. Guidance-only rows: 0.
+Supplemental attribute-value fallback rows: 21. Exact value replacements: 19. Manual value rows: 0. Removed/no-replacement value rows: 2. These rows are used only when the same key/value is not covered by live `[Obsolete]` metadata from the referenced package.
 
 | Version | Domain | Total | Live metadata | Supplemental | Exact supplemental | Manual/context | Removed/no replacement |
 | -- | -- | --: | --: | --: | --: | --: | --: |
@@ -271,6 +273,34 @@ Curated changelog mentions: 156. Live metadata rows: 105. Supplemental diagnosti
 | `vcs.repository.ref.name` | AttributeKey | any | vcs | 1.29.0 | DeprecatedButGenerated | `vcs.ref.head.name` | Covered by generated [Obsolete] metadata when the consumer references OpenTelemetry.SemanticConventions. semantic-conventions/model deprecated attribute |
 | `vcs.repository.ref.revision` | AttributeKey | any | vcs | 1.29.0 | DeprecatedButGenerated | `vcs.ref.head.revision` | Covered by generated [Obsolete] metadata when the consumer references OpenTelemetry.SemanticConventions. semantic-conventions/model deprecated attribute |
 | `vcs.repository.ref.type` | AttributeKey | any | vcs | 1.29.0 | DeprecatedButGenerated | `vcs.ref.head.type` | Covered by generated [Obsolete] metadata when the consumer references OpenTelemetry.SemanticConventions. semantic-conventions/model deprecated attribute |
+
+## Supplemental Attribute Value Fallback
+
+These value rows are intentionally separate from the 156-entry name/key/event/metric inventory. `OTSC0014` remains primary when the referenced package exposes `[Obsolete]` value constants; the supplemental analyzer uses this table only when live value metadata is absent.
+
+| Old value | Signal | Domain | Migration | Replacement | Evidence |
+| -- | -- | -- | -- | -- | -- |
+| `cloud.platform=azure_aks` | any | cloud | ExactValueRename | `azure.aks` | Use 'azure.aks' instead. |
+| `cloud.platform=azure_app_service` | any | cloud | ExactValueRename | `azure.app_service` | Use 'azure.app_service' instead. |
+| `cloud.platform=azure_container_apps` | any | cloud | ExactValueRename | `azure.container_apps` | Use 'azure.container_apps' instead. |
+| `cloud.platform=azure_container_instances` | any | cloud | ExactValueRename | `azure.container_instances` | Use 'azure.container_instances' instead. |
+| `cloud.platform=azure_functions` | any | cloud | ExactValueRename | `azure.functions` | Use 'azure.functions' instead. |
+| `cloud.platform=azure_openshift` | any | cloud | ExactValueRename | `azure.openshift` | Use 'azure.openshift' instead. |
+| `cloud.platform=azure_vm` | any | cloud | ExactValueRename | `azure.vm` | Use 'azure.vm' instead. |
+| `db.system=cache` | any | db | ExactValueRename | `intersystems_cache` | Use 'intersystems_cache' instead. |
+| `db.system=cloudscape` | any | db | ExactValueRename | `other_sql` | Use 'other_sql' instead. |
+| `db.system=coldfusion` | any | db | RemovedNoReplacement | - | No replacement exists at this time. |
+| `db.system=firstsql` | any | db | ExactValueRename | `other_sql` | Use 'other_sql' instead. |
+| `db.system=mssqlcompact` | any | db | ExactValueRename | `other_sql` | Use 'other_sql' instead. |
+| `gen_ai.system=az.ai.inference` | any | gen_ai | ExactValueRename | `azure.ai.inference` | Use 'azure.ai.inference' instead. |
+| `gen_ai.system=az.ai.openai` | any | gen_ai | ExactValueRename | `azure.ai.openai` | Use 'azure.ai.openai' instead. |
+| `gen_ai.system=gemini` | any | gen_ai | ExactValueRename | `gcp.gemini` | Use 'gcp.gemini' instead. |
+| `gen_ai.system=vertex_ai` | any | gen_ai | ExactValueRename | `gcp.vertex_ai` | Use 'gcp.vertex_ai' instead. |
+| `messaging.operation.type=deliver` | any | messaging | ExactValueRename | `process` | Use 'process' instead. |
+| `messaging.operation.type=publish` | any | messaging | ExactValueRename | `send` | Use 'send' instead. |
+| `os.type=z_os` | any | os | ExactValueRename | `zos` | Use 'zos' instead. |
+| `system.memory.state=shared` | any | system | RemovedNoReplacement | - | Removed, report shared memory usage with `metric.system.memory.linux.shared` metric |
+| `vcs.provider.name=gittea` | any | vcs | ExactValueRename | `gitea` | Use 'gitea' instead. |
 
 ## Generated File
 
