@@ -4,3 +4,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator")]
+[assembly: InternalsVisibleTo("ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests")]

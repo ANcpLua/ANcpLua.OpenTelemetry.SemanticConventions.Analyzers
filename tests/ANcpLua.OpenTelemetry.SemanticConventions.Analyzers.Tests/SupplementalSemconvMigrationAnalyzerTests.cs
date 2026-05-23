@@ -38,9 +38,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;
@@ -111,7 +111,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
-    public async Task Exact_Renamed_Value_In_Production_Telemetry_Reports_Error()
+    public async Task Generated_Value_Metadata_Is_Not_Duplicated_By_Supplemental_Catalog()
     {
         const string testCode = FakeTelemetry + """
 
@@ -119,18 +119,14 @@ public class SupplementalSemconvMigrationAnalyzerTests
             {
                 void M(FakeSpan span)
                 {
-                    span.SetTag("cloud.platform", {|#0:"azure_aks"|});
+                    span.SetTag("cloud.platform", "azure_aks");
                 }
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
-            .WithLocation(0);
-
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
         {
             TestCode = testCode,
-            ExpectedDiagnostics = { expected },
         }.RunAsync();
     }
 
@@ -165,9 +161,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;
@@ -192,9 +188,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class OpenTelemetryDeprecatedSemconvCatalog
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag("http.method", "GET");
+                    meter.CreateHistogram<long>("system.memory.shared");
                 }
             }
             """;
@@ -215,9 +211,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class SchemaTranslator
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;
@@ -239,9 +235,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class GeneratedTelemetry
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>("system.memory.shared");
                 }
             }
             """;
@@ -262,9 +258,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;
@@ -289,9 +285,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag("http.method", "GET");
+                    meter.CreateHistogram<long>("system.memory.shared");
                 }
             }
             """;
@@ -315,7 +311,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
                 void M()
                 {
                     var tags = new Dictionary<string, object?>();
-                    tags.Add({|#0:"http.method"|}, "GET");
+                    tags.Add({|#0:"message.id"|}, "42");
                 }
             }
             """;
@@ -361,9 +357,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag({|#0:"http.method"|}, "GET");
+                    meter.CreateHistogram<long>({|#0:"system.memory.shared"|});
                 }
             }
             """;
@@ -372,9 +368,9 @@ public class SupplementalSemconvMigrationAnalyzerTests
 
             class C
             {
-                void M(FakeSpan span)
+                void M(Meter meter)
                 {
-                    span.SetTag("http.request.method", "GET");
+                    meter.CreateHistogram<long>("system.memory.linux.shared");
                 }
             }
             """;
