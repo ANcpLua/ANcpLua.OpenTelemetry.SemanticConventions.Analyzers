@@ -123,6 +123,7 @@ static string GenerateMarkdown(string repoRoot)
     sb.AppendLine("var tags = new Dictionary<string, object?> { [\"cloud.platform\"] = \"azure_aks\" }; activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after local payload initializer expansion.");
     sb.AppendLine("tags.Add(\"cloud.platform\", \"azure_aks\"); activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after mutable local payload flow is proven.");
     sb.AppendLine("new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.");
+    sb.AppendLine("new ActivityLink(context, tags: new[] { new KeyValuePair<string, object?>(\"message.id\", \"42\") }); // OTSC0031 in span link attribute payloads.");
     sb.AppendLine("counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // OTSC0012 in metric instrument tag payloads.");
     sb.AppendLine("histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // OTSC0030 supplemental value fallback in metric tag payloads.");
     sb.AppendLine("logger.Log(LogLevel.Information, eventId, new[] { new KeyValuePair<string, object?>(\"event.name\", \"legacy.event\") }, exception, formatter); // OTSC0031 in visible ILogger state payloads.");

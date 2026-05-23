@@ -57,6 +57,11 @@ public class DeprecatedSemconvValueAnalyzerTests
             public ActivityEvent(string name, object? timestamp = null, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
         }
 
+        public readonly struct ActivityLink
+        {
+            public ActivityLink(object context, IEnumerable<KeyValuePair<string, object?>>? tags = null) { }
+        }
+
         public sealed class Counter<T>
         {
             public void Add(T delta, params KeyValuePair<string, object?>[] tags) { }
@@ -234,6 +239,33 @@ public class DeprecatedSemconvValueAnalyzerTests
                         {
                             { "http.request.method", {|#0:"_LEGACY_GET"|} },
                         });
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvValueAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task ActivityLink_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    {
+        const string testCode = SemconvFixture + """
+
+            class C
+            {
+                ActivityLink Create(object context)
+                {
+                    return new ActivityLink(
+                        context,
+                        tags: new[] { new KeyValuePair<string, object?>("http.request.method", {|#0:"_LEGACY_GET"|}) });
                 }
             }
             """;

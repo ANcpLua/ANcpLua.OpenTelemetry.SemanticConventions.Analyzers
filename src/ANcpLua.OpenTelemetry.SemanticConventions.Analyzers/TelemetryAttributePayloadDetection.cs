@@ -87,6 +87,12 @@ internal static class TelemetryAttributePayloadDetection
         {
             AnalyzePayload(tagsArgument.Value, report);
         }
+
+        if (IsActivityLinkCreation(objectCreation.Type)
+            && TryGetArgumentByNameOrOrdinal(objectCreation.Arguments, "tags", 1, out var linkTagsArgument))
+        {
+            AnalyzePayload(linkTagsArgument.Value, report);
+        }
     }
 
     public static void AnalyzeCollectionExpression(
@@ -494,7 +500,8 @@ internal static class TelemetryAttributePayloadDetection
             }
 
             if (argument.Parent is IObjectCreationOperation objectCreation
-                && IsActivityEventTagsArgument(objectCreation, argument))
+                && (IsActivityEventTagsArgument(objectCreation, argument)
+                    || IsActivityLinkTagsArgument(objectCreation, argument)))
             {
                 return true;
             }
@@ -561,7 +568,8 @@ internal static class TelemetryAttributePayloadDetection
             }
 
             if (argument.Parent is IObjectCreationOperation objectCreation
-                && IsActivityEventTagsArgument(objectCreation, argument))
+                && (IsActivityEventTagsArgument(objectCreation, argument)
+                    || IsActivityLinkTagsArgument(objectCreation, argument)))
             {
                 return true;
             }
@@ -604,6 +612,13 @@ internal static class TelemetryAttributePayloadDetection
         IsActivityEventCreation(objectCreation.Type)
         && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
             || argument.Parameter?.Ordinal == 2);
+
+    private static bool IsActivityLinkTagsArgument(
+        IObjectCreationOperation objectCreation,
+        IArgumentOperation argument) =>
+        IsActivityLinkCreation(objectCreation.Type)
+        && (string.Equals(argument.Parameter?.Name, "tags", StringComparison.Ordinal)
+            || argument.Parameter?.Ordinal == 1);
 
     private static bool IsActivitySourceTagsArgument(
         IInvocationOperation invocation,
@@ -652,6 +667,9 @@ internal static class TelemetryAttributePayloadDetection
 
     private static bool IsActivityEventCreation(ITypeSymbol? type) =>
         type?.Name is "ActivityEvent";
+
+    private static bool IsActivityLinkCreation(ITypeSymbol? type) =>
+        type?.Name is "ActivityLink";
 
     private static bool IsActivitySourceStartActivity(IInvocationOperation invocation) =>
         invocation.TargetMethod.Name == "StartActivity"
