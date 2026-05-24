@@ -277,6 +277,91 @@ public class DeprecatedSemconvAnalyzerTests
     // This is the consumer-side layout where SemanticConventions is the tail
     // segment of a custom root, e.g. types live directly under
     // `Qyl.OpenTelemetry.SemanticConventions` with no further nesting.
+    // Step 2 — non-Attributes tier coverage gated by an MSBuild flag.
+    //
+    // Weaver SourceGeneration emits five tiers per stability band:
+    //   *Attributes, *Metrics, *Meters, *Events, *Activities.
+    //
+    // The default surface scans only the *Attributes tier. Consumers that opt
+    // into wider coverage set `build_property.OtelSemConvNonAttributesTiers = true`
+    // and pick up [Obsolete] const-string deprecations in the other four tiers
+    // too. These two tests pin the contract from both sides so a regression in
+    // either direction (default loosened, or flag stops being honoured) becomes
+    // a red test rather than a silent behaviour drift.
+
+    [Fact]
+    public async Task Reference_To_Obsolete_In_MetricsClass_WithoutFlag_Reports_Nothing()
+    {
+        const string testCode = """
+            #pragma warning disable CS0618
+            namespace OpenTelemetry.SemanticConventions.Metrics
+            {
+                public static class HttpMetrics
+                {
+                    [System.Obsolete("Replaced by http.client.request.duration.")]
+                    public const string MetricHttpClientDuration = "http.client.duration";
+                }
+            }
+
+            class C
+            {
+                void M()
+                {
+                    var x = OpenTelemetry.SemanticConventions.Metrics.HttpMetrics.MetricHttpClientDuration;
+                }
+            }
+            """;
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Reference_To_Obsolete_In_MetricsClass_WithFlag_Reports_OTSC0010()
+    {
+        const string testCode = """
+            #pragma warning disable CS0618
+            namespace OpenTelemetry.SemanticConventions.Metrics
+            {
+                public static class HttpMetrics
+                {
+                    [System.Obsolete("Replaced by http.client.request.duration.")]
+                    public const string MetricHttpClientDuration = "http.client.duration";
+                }
+            }
+
+            class C
+            {
+                void M()
+                {
+                    var x = OpenTelemetry.SemanticConventions.Metrics.HttpMetrics.{|#0:MetricHttpClientDuration|};
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("HttpMetrics.MetricHttpClientDuration", "Replaced by http.client.request.duration.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            TestState =
+            {
+                AnalyzerConfigFiles =
+                {
+                    ("/.globalconfig", """
+                        is_global = true
+                        build_property.OtelSemConvNonAttributesTiers = true
+                        """),
+                },
+            },
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
     [Fact]
     public async Task Reference_To_Obsolete_In_Trailing_Semconv_Namespace_Reports_OTSC0010()
     {

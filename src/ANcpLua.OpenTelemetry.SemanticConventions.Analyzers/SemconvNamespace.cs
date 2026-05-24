@@ -13,14 +13,44 @@ internal static class SemconvNamespace
     /// namespace segment named <c>OpenTelemetry.SemanticConventions</c>. Handles both
     /// upstream's flat layout and consumer-side nested layouts (e.g. qyl).
     /// </summary>
-    public static bool IsAttributesType(INamedTypeSymbol type)
+    public static bool IsAttributesType(INamedTypeSymbol type) =>
+        IsAttributesType(type, allowNonAttributesTiers: false);
+
+    /// <summary>
+    /// Returns true if the type's suffix matches a recognised SemConv tier AND it lives
+    /// in or under the SemConv namespace. When <paramref name="allowNonAttributesTiers"/>
+    /// is <c>true</c>, the suffix check additionally accepts the four non-Attributes
+    /// tiers Weaver SourceGeneration emits — <c>*Metrics</c>, <c>*Meters</c>,
+    /// <c>*Events</c>, <c>*Activities</c> — gated behind
+    /// <c>build_property.OtelSemConvNonAttributesTiers</c> so consumers explicitly
+    /// opt into wider coverage.
+    /// </summary>
+    public static bool IsAttributesType(INamedTypeSymbol type, bool allowNonAttributesTiers)
     {
-        if (!type.Name.EndsWith("Attributes", StringComparison.Ordinal))
+        if (!HasRecognisedTierSuffix(type.Name, allowNonAttributesTiers))
         {
             return false;
         }
 
         return IsInSemconvNamespace(type.ContainingNamespace);
+    }
+
+    private static bool HasRecognisedTierSuffix(string typeName, bool allowNonAttributesTiers)
+    {
+        if (typeName.EndsWith("Attributes", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (!allowNonAttributesTiers)
+        {
+            return false;
+        }
+
+        return typeName.EndsWith("Metrics", StringComparison.Ordinal)
+            || typeName.EndsWith("Meters", StringComparison.Ordinal)
+            || typeName.EndsWith("Events", StringComparison.Ordinal)
+            || typeName.EndsWith("Activities", StringComparison.Ordinal);
     }
 
     public static bool IsInSemconvNamespace(INamespaceSymbol? ns)
