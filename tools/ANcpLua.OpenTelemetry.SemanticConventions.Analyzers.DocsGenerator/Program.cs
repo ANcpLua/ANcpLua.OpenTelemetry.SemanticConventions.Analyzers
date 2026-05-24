@@ -159,17 +159,17 @@ file static class DocsGenerator
 
     private static string GetCodeFixLabel(string diagnosticId, HashSet<string> fixableIds)
     {
-        if (diagnosticId == "QYL0030" && fixableIds.Contains(diagnosticId))
+        if (!fixableIds.Contains(diagnosticId))
         {
-            return "Exact replacements only";
+            return "No";
         }
 
-        if (fixableIds.Contains(diagnosticId) && diagnosticId is not "QYL0031" and not "QYL0032")
-        {
-            return "Yes";
-        }
-
-        return "No";
+        // QYL0030/QYL0031/QYL0032 share SupplementalSemconvMigrationCodeFixProvider,
+        // which gates registration via IsExactReplacement (MigrationKind == ExactRename
+        // / ExactValueRename) per-diagnostic, not by ID. Reflect that contract in docs.
+        return diagnosticId is "QYL0030" or "QYL0031" or "QYL0032"
+            ? "Exact replacements only"
+            : "Yes";
     }
 
     private static void WritePrecedenceAndSuppression(StringBuilder sb)

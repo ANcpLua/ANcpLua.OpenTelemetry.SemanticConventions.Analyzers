@@ -40,8 +40,8 @@ The package-level generated catalog is in [`docs/Qyl.OpenTelemetry.SemanticConve
 | [`QYL0014`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0014) | Warning | Yes | Hard-coded value matches a semantic-convention value constant marked `[Obsolete]` |
 | [`QYL0021`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0021) | Warning | No | Library directly references incubating semantic-convention members |
 | [`QYL0030`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0030) | Error | Exact replacements only | Supplemental catalog exact replacement in production telemetry emission |
-| [`QYL0031`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0031) | Warning | No | Supplemental catalog context-sensitive, manual-review, removed/no-replacement, or ambiguous payload migration |
-| [`QYL0032`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0032) | Info | No | Supplemental catalog item appears in test, fixture, compatibility, generated, translator, or catalog context |
+| [`QYL0031`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0031) | Warning | Exact replacements only | Supplemental catalog context-sensitive, manual-review, removed/no-replacement, or ambiguous payload migration |
+| [`QYL0032`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0032) | Info | Exact replacements only | Supplemental catalog item appears in test, fixture, compatibility, generated, translator, or catalog context |
 
 ## Examples
 
