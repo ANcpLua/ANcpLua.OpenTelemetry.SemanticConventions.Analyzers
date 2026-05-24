@@ -13,8 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers\ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.csproj" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.3.0" PrivateAssets="all" />
-    <PackageReference Include="System.Collections.Immutable" Version="9.0.16" PrivateAssets="all" />
-    <PackageReference Include="System.Reflection.Metadata" Version="9.0.16" PrivateAssets="all" />
+    <PackageReference Include="System.Collections.Immutable" Version="10.0.8" PrivateAssets="all" />
+    <PackageReference Include="System.Reflection.Metadata" Version="10.0.8" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
