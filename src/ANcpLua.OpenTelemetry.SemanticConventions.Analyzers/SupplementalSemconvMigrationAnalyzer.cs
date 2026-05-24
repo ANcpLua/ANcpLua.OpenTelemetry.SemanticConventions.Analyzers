@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
@@ -791,7 +791,7 @@ public sealed class SupplementalSemconvMigrationAnalyzer : DiagnosticAnalyzer
 
         var args = descriptor.Id switch
         {
-            "OTSC0030" => new object[] { entry.OldName, replacement, evidence },
+            "QYL0030" => new object[] { entry.OldName, replacement, evidence },
             _ => new object[] { entry.OldName, evidence },
         };
 

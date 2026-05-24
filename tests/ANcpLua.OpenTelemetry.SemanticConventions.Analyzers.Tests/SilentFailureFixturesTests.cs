@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 /// <summary>
 /// Pins the four boundary behaviours where a regression would manifest as a
@@ -72,7 +74,7 @@ public class SilentFailureFixturesTests
     // code-fix is withheld because TryExtractExactReplacement rejects the shape
     // (pinned at the unit-test layer in SemconvCodeFixHelpersTests).
     [Fact]
-    public async Task Custom_Note_Format_Reports_OTSC0010_Without_CodeFix()
+    public async Task Custom_Note_Format_Reports_QYL0010_Without_CodeFix()
     {
         const string testCode = """
             #pragma warning disable CS0618
@@ -96,7 +98,7 @@ public class SilentFailureFixturesTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Use 'http.request.method' instead.");
 
@@ -145,7 +147,7 @@ public class SilentFailureFixturesTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.does.not.exist.");
 

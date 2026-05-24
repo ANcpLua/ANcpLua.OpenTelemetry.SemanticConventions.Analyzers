@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class GenAiExecuteToolNameAnalyzerTests
 {
@@ -18,7 +20,7 @@ public class GenAiExecuteToolNameAnalyzerTests
         """;
 
     [Fact]
-    public async Task ExecuteTool_Without_ToolName_Reports_OTSC0001()
+    public async Task ExecuteTool_Without_ToolName_Reports_QYL0001()
     {
         const string testCode = FakeSpanShim + """
 
@@ -32,7 +34,7 @@ public class GenAiExecuteToolNameAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0001", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0001", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GenAiExecuteToolNameAnalyzer, DefaultVerifier>

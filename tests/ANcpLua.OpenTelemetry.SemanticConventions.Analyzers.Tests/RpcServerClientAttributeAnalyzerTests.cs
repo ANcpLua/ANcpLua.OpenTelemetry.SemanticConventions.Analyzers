@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class RpcServerClientAttributeAnalyzerTests
 {
@@ -21,7 +23,7 @@ public class RpcServerClientAttributeAnalyzerTests
         """;
 
     [Fact]
-    public async Task RpcServer_With_ClientAddress_Reports_OTSC0005()
+    public async Task RpcServer_With_ClientAddress_Reports_QYL0005()
     {
         const string testCode = FakeSpanShim + """
 
@@ -36,7 +38,7 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.address");
 
@@ -48,7 +50,7 @@ public class RpcServerClientAttributeAnalyzerTests
     }
 
     [Fact]
-    public async Task RpcServer_With_ClientPort_Reports_OTSC0005()
+    public async Task RpcServer_With_ClientPort_Reports_QYL0005()
     {
         const string testCode = FakeSpanShim + """
 
@@ -62,7 +64,7 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.port");
 
@@ -133,10 +135,10 @@ public class RpcServerClientAttributeAnalyzerTests
             }
             """;
 
-        var addr = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
+        var addr = new DiagnosticResult("QYL0005", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("client.address");
-        var port = new DiagnosticResult("OTSC0005", DiagnosticSeverity.Warning)
+        var port = new DiagnosticResult("QYL0005", DiagnosticSeverity.Warning)
             .WithLocation(1)
             .WithArguments("client.port");
 

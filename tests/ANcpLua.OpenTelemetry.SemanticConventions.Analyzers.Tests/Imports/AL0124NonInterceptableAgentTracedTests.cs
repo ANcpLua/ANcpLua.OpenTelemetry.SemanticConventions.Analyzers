@@ -1,5 +1,5 @@
-using ANcpLua.Analyzers.Analyzers;
-using ANcpLua.Analyzers.CodeFixes.CodeFixes;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers.Analyzers;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers.CodeFixes.CodeFixes;
 using ANcpLua.Roslyn.Utilities.Testing;
 
 namespace ANcpLua.Analyzers.Tests;

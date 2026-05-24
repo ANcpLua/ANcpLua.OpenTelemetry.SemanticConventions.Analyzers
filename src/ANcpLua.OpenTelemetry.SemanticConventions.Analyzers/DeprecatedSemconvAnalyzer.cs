@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0010: Flags references to <c>[Obsolete]</c> <c>const string</c> fields under
+/// QYL0010: Flags references to <c>[Obsolete]</c> <c>const string</c> fields under
 /// <c>OpenTelemetry.SemanticConventions.Attributes.*</c>.
 /// </summary>
 /// <remarks>

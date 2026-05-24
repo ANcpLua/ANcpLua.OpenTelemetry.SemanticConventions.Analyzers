@@ -1,4 +1,4 @@
-using ANcpLua.Analyzers.Analyzers;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers.Analyzers;
 using ANcpLua.Roslyn.Utilities.Testing;
 
 namespace ANcpLua.Analyzers.Tests;

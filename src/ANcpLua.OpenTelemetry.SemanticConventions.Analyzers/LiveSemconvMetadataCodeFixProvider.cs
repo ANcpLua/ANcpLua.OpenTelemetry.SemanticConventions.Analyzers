@@ -1,16 +1,16 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LiveSemconvMetadataCodeFixProvider))]
 public sealed class LiveSemconvMetadataCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds { get; } =
     [
-        "OTSC0010",
-        "OTSC0012",
-        "OTSC0014",
+        "QYL0010",
+        "QYL0012",
+        "QYL0014",
     ];
 
     public override FixAllProvider GetFixAllProvider() =>
@@ -28,7 +28,7 @@ public sealed class LiveSemconvMetadataCodeFixProvider : CodeFixProvider
                 continue;
             }
 
-            if (diagnostic.Id == "OTSC0010")
+            if (diagnostic.Id == "QYL0010")
             {
                 await RegisterTypedConstantFixAsync(context, diagnostic, replacement!).ConfigureAwait(false);
                 continue;

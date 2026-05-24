@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class PreferSemconvConstantAnalyzerTests
 {
@@ -82,7 +84,7 @@ public class PreferSemconvConstantAnalyzerTests
         """;
 
     [Fact]
-    public async Task Hardcoded_HttpRequestMethod_Reports_OTSC0011()
+    public async Task Hardcoded_HttpRequestMethod_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -95,7 +97,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("http.request.method", "HttpAttributes.AttributeHttpRequestMethod");
 
@@ -163,13 +165,13 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var addr = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var addr = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
-        var port = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var port = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(1)
             .WithArguments("server.port", "ServerAttributes.AttributeServerPort");
-        var code = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var code = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(2)
             .WithArguments("http.response.status_code", "HttpAttributes.AttributeHttpResponseStatusCode");
 
@@ -181,7 +183,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task SetBaggage_Hardcoded_Key_Reports_OTSC0011()
+    public async Task SetBaggage_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -194,7 +196,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("http.request.method", "HttpAttributes.AttributeHttpRequestMethod");
 
@@ -206,7 +208,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task TagList_Add_Hardcoded_Key_Reports_OTSC0011()
+    public async Task TagList_Add_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -219,7 +221,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -231,7 +233,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ResourceBuilder_AddAttributes_Hardcoded_Key_Reports_OTSC0011()
+    public async Task ResourceBuilder_AddAttributes_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -247,7 +249,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -259,7 +261,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityEvent_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ActivityEvent_Tags_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -277,7 +279,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -289,7 +291,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityLink_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ActivityLink_Tags_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -304,7 +306,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -316,7 +318,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityTagsCollection_Indexer_Hardcoded_Key_Reports_OTSC0011()
+    public async Task ActivityTagsCollection_Indexer_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -329,7 +331,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -341,7 +343,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ActivitySource_StartActivity_Tags_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -359,7 +361,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -371,7 +373,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -389,7 +391,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -401,7 +403,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -417,7 +419,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -429,7 +431,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task ResourceBuilder_AddAttributes_Collection_Expression_Hardcoded_Key_Reports_OTSC0011_Once()
+    public async Task ResourceBuilder_AddAttributes_Collection_Expression_Hardcoded_Key_Reports_QYL0011_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -443,7 +445,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -455,7 +457,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task MetricCounter_Add_Hardcoded_Key_Reports_OTSC0011()
+    public async Task MetricCounter_Add_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -468,7 +470,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -480,7 +482,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task Measurement_Tags_Hardcoded_Key_Reports_OTSC0011()
+    public async Task Measurement_Tags_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -493,7 +495,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 
@@ -505,7 +507,7 @@ public class PreferSemconvConstantAnalyzerTests
     }
 
     [Fact]
-    public async Task Logger_BeginScope_State_Hardcoded_Key_Reports_OTSC0011()
+    public async Task Logger_BeginScope_State_Hardcoded_Key_Reports_QYL0011()
     {
         const string testCode = SemconvFixture + """
 
@@ -521,7 +523,7 @@ public class PreferSemconvConstantAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0011", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0011", DiagnosticSeverity.Info)
             .WithLocation(0)
             .WithArguments("server.address", "ServerAttributes.AttributeServerAddress");
 

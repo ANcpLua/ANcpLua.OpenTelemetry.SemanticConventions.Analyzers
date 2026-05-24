@@ -1,16 +1,16 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(SupplementalSemconvMigrationCodeFixProvider))]
 public sealed class SupplementalSemconvMigrationCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds { get; } =
     [
-        "OTSC0030",
-        "OTSC0031",
-        "OTSC0032",
+        "QYL0030",
+        "QYL0031",
+        "QYL0032",
     ];
 
     public override FixAllProvider GetFixAllProvider() =>

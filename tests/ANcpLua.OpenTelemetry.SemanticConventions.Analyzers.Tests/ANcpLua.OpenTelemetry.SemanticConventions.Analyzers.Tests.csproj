@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <!-- Imported AL-side test files use xunit.v3 + AwesomeAssertions + ANcpLua.Roslyn.Utilities.Testing
-       which OTSC's xunit v2 + Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit setup does not provide.
+       which QYL's xunit v2 + Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit setup does not provide.
        Excluded from compilation pending test-framework alignment (see PR follow-up tracker). -->
   <ItemGroup>
     <Compile Remove="Imports\**\*.cs" />

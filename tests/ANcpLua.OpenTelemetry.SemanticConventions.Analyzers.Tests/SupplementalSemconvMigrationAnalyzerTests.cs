@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class SupplementalSemconvMigrationAnalyzerTests
 {
@@ -97,7 +99,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -108,7 +110,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
     }
 
     [Fact]
-    public async Task Deprecated_Metadata_Literal_Remains_Handled_By_OTSC0012_Not_Supplemental()
+    public async Task Deprecated_Metadata_Literal_Remains_Handled_By_QYL0012_Not_Supplemental()
     {
         const string semconvFixture = """
             namespace OpenTelemetry.SemanticConventions
@@ -152,7 +154,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -213,7 +215,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -237,7 +239,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -261,7 +263,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -285,7 +287,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0032", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0032", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         var test = new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -335,7 +337,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0032", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0032", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -361,7 +363,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0032", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0032", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -387,7 +389,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -434,7 +436,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         var test = new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -485,7 +487,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -512,7 +514,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -541,7 +543,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -567,7 +569,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -591,7 +593,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -620,7 +622,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -649,7 +651,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -676,7 +678,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -706,7 +708,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -733,7 +735,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -762,7 +764,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -793,7 +795,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -817,7 +819,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -841,7 +843,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -865,7 +867,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0031", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0031", DiagnosticSeverity.Warning)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<SupplementalSemconvMigrationAnalyzer, DefaultVerifier>
@@ -900,7 +902,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -936,7 +938,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -982,7 +984,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1028,7 +1030,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1070,7 +1072,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1112,7 +1114,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1154,7 +1156,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1192,7 +1194,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1228,7 +1230,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>
@@ -1264,7 +1266,7 @@ public class SupplementalSemconvMigrationAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0030", DiagnosticSeverity.Error)
+        var expected = new DiagnosticResult("QYL0030", DiagnosticSeverity.Error)
             .WithLocation(0);
 
         await new CSharpCodeFixTest<SupplementalSemconvMigrationAnalyzer, SupplementalSemconvMigrationCodeFixProvider, DefaultVerifier>

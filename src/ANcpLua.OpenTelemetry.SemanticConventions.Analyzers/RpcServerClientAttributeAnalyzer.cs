@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0005: Flags <c>SetTag("client.address", …)</c> / <c>"client.port"</c> calls inside
+/// QYL0005: Flags <c>SetTag("client.address", …)</c> / <c>"client.port"</c> calls inside
 /// a method that also contains a <c>SetTag("rpc.system", …)</c>. v1.41.0 removed
 /// <c>client.*</c> from RPC server span definitions.
 /// </summary>

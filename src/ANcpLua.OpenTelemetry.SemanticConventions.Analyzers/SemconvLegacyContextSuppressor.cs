@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// Suppresses every <c>OTSC*</c> diagnostic when it fires inside a class, struct,
+/// Suppresses every <c>QYL*</c> diagnostic when it fires inside a class, struct,
 /// record, or member whose name is one of the well-known legacy/compatibility
 /// shapes that intentionally model an older schema:
 ///
@@ -30,7 +30,7 @@ namespace OpenTelemetry.SemanticConventions.Analyzers;
 // Roslyn analyzer pack's RS1001 rule still expects the [DiagnosticAnalyzer]
 // marker even though SuppressionDescriptors are independent of language-bound
 // diagnostic registration. Marking the suppressor as CSharp matches the
-// language scope of the OTSC* analyzers it suppresses.
+// language scope of the QYL* analyzers it suppresses.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class SemconvLegacyContextSuppressor : DiagnosticSuppressor
 {
@@ -44,17 +44,17 @@ public sealed class SemconvLegacyContextSuppressor : DiagnosticSuppressor
 
     private static readonly ImmutableArray<string> s_suppressedDiagnosticIds =
         ImmutableArray.Create(
-            "OTSC0001",
-            "OTSC0002",
-            "OTSC0005",
-            "OTSC0010",
-            "OTSC0011",
-            "OTSC0012",
-            "OTSC0014",
-            "OTSC0021",
-            "OTSC0030",
-            "OTSC0031",
-            "OTSC0032");
+            "QYL0001",
+            "QYL0002",
+            "QYL0005",
+            "QYL0010",
+            "QYL0011",
+            "QYL0012",
+            "QYL0014",
+            "QYL0021",
+            "QYL0030",
+            "QYL0031",
+            "QYL0032");
 
     private static readonly ImmutableDictionary<string, SuppressionDescriptor> s_suppressions =
         BuildSuppressions();
@@ -193,7 +193,7 @@ public sealed class SemconvLegacyContextSuppressor : DiagnosticSuppressor
             builder.Add(
                 id,
                 new SuppressionDescriptor(
-                    id: "OTSC9" + id.Substring(4),
+                    id: "QYL9" + id.Substring(4),
                     suppressedDiagnosticId: id,
                     justification: Justification));
         }

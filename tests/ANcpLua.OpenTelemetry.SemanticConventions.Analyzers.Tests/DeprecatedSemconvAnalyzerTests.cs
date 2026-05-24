@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class DeprecatedSemconvAnalyzerTests
 {
@@ -31,7 +33,7 @@ public class DeprecatedSemconvAnalyzerTests
         """;
 
     [Fact]
-    public async Task Reference_To_Obsolete_HttpAttribute_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_HttpAttribute_Reports_QYL0010()
     {
         const string testCode = SemconvFixture + """
 
@@ -44,7 +46,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 
@@ -100,7 +102,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 
@@ -113,7 +115,7 @@ public class DeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Reference_To_Obsolete_NetAttribute_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_NetAttribute_Reports_QYL0010()
     {
         const string testCode = SemconvFixture + """
 
@@ -126,7 +128,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("NetAttributes.AttributeNetSockHostAddr", "Replaced by network.local.address.");
 
@@ -196,7 +198,7 @@ public class DeprecatedSemconvAnalyzerTests
     // the StartsWith(Root + ".") branch via the conventional `*.Attributes`
     // sub-namespace, but `== Root` itself was not directly covered.
     [Fact]
-    public async Task Reference_To_Obsolete_In_Exact_Root_Semconv_Namespace_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_In_Exact_Root_Semconv_Namespace_Reports_QYL0010()
     {
         const string testCode = """
             #pragma warning disable CS0618
@@ -220,7 +222,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 
@@ -235,9 +237,9 @@ public class DeprecatedSemconvAnalyzerTests
     //   s.Contains("." + Root + ".", StringComparison.Ordinal)
     // This is the consumer-side nested layout documented at SemconvNamespace.cs
     // ("e.g. qyl"). If the .Contains branch regresses, every nested-namespace
-    // consumer silently loses OTSC0010/0011/0012/0014 coverage with no compile error.
+    // consumer silently loses QYL0010/0011/0012/0014 coverage with no compile error.
     [Fact]
-    public async Task Reference_To_Obsolete_In_Nested_Semconv_Namespace_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_In_Nested_Semconv_Namespace_Reports_QYL0010()
     {
         const string testCode = """
             #pragma warning disable CS0618
@@ -261,7 +263,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 
@@ -319,7 +321,7 @@ public class DeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Reference_To_Obsolete_In_MetricsClass_WithFlag_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_In_MetricsClass_WithFlag_Reports_QYL0010()
     {
         const string testCode = """
             #pragma warning disable CS0618
@@ -341,7 +343,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpMetrics.MetricHttpClientDuration", "Replaced by http.client.request.duration.");
 
@@ -363,7 +365,7 @@ public class DeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Reference_To_Obsolete_In_Trailing_Semconv_Namespace_Reports_OTSC0010()
+    public async Task Reference_To_Obsolete_In_Trailing_Semconv_Namespace_Reports_QYL0010()
     {
         const string testCode = """
             #pragma warning disable CS0618
@@ -387,7 +389,7 @@ public class DeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0010", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
 

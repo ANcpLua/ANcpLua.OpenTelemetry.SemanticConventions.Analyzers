@@ -8,7 +8,7 @@
     <RootNamespace>OpenTelemetry.SemanticConventions.Analyzers</RootNamespace>
     <AssemblyName>OpenTelemetry.SemanticConventions.Analyzers</AssemblyName>
 
-    <PackageId>ANcpLua.OpenTelemetry.SemanticConventions.Analyzers</PackageId>
+    <PackageId>Qyl.OpenTelemetry.SemanticConventions.Analyzers</PackageId>
     <Description>Roslyn diagnostic analyzers for OpenTelemetry.SemanticConventions consumers — flags deprecated attribute usage, v1.41.0 breaking-change violations, and broader OTel observability/instrumentation patterns at compile time.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>opentelemetry;semantic-conventions;roslyn;analyzer;otel</PackageTags>
@@ -59,13 +59,13 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- Wire the imported Resources.resx so its embedded resource name matches what
-       Imports/Resources.Designer.cs expects (namespace ANcpLua.Analyzers.Resources). -->
+  <!-- Wire Resources.resx so its embedded resource name matches what
+       Resources.Designer.cs expects (namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Resources). -->
   <ItemGroup>
-    <Compile Update="Imports\Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx"/>
-    <EmbeddedResource Update="Imports\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" LogicalName="ANcpLua.Analyzers.Resources.resources"/>
-    <Compile Update="Imports\CodeFixResources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="CodeFixResources.resx"/>
-    <EmbeddedResource Update="Imports\CodeFixResources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="CodeFixResources.Designer.cs" LogicalName="ANcpLua.Analyzers.CodeFixes.CodeFixResources.resources"/>
+    <Compile Update="Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx"/>
+    <EmbeddedResource Update="Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" LogicalName="Qyl.OpenTelemetry.SemanticConventions.Analyzers.Resources.resources"/>
+    <Compile Update="CodeFixResources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="CodeFixResources.resx"/>
+    <EmbeddedResource Update="CodeFixResources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="CodeFixResources.Designer.cs" LogicalName="Qyl.OpenTelemetry.SemanticConventions.Analyzers.CodeFixResources.resources"/>
   </ItemGroup>
 
   <ItemGroup>

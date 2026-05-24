@@ -4,5 +4,5 @@ description: |
   smoke test. Declares a single deprecated attribute (http.method renamed
   to http.request.method) so that any change in Weaver's default `[Obsolete]`
   note format becomes a red WeaverRoundTripTests run rather than a silent
-  loss of OTSC0010 coverage.
+  loss of QYL0010 coverage.
 schema_url: https://opentelemetry.io/schemas/0.0.1
