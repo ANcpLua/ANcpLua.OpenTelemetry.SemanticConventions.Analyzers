@@ -126,9 +126,7 @@ file static class DocsGenerator
         sb.AppendLine("| -- | -- | -- | -- | -- |");
         foreach (var d in descriptors)
         {
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only" : "Yes"
-                : "No";
+            var codeFix = GetCodeFixLabel(d.Id, fixableIds);
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
     }
@@ -154,12 +152,24 @@ file static class DocsGenerator
             sb.AppendLine();
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only." : "Yes."
-                : "No.";
-            sb.AppendLine($"Code fix: {codeFix}");
+            sb.AppendLine($"Code fix: {GetCodeFixLabel(d.Id, fixableIds)}.");
             sb.AppendLine();
         }
+    }
+
+    private static string GetCodeFixLabel(string diagnosticId, HashSet<string> fixableIds)
+    {
+        if (!fixableIds.Contains(diagnosticId))
+        {
+            return "No";
+        }
+
+        // QYL0030/QYL0031/QYL0032 share SupplementalSemconvMigrationCodeFixProvider,
+        // which gates registration via IsExactReplacement (MigrationKind == ExactRename
+        // / ExactValueRename) per-diagnostic, not by ID. Reflect that contract in docs.
+        return diagnosticId is "QYL0030" or "QYL0031" or "QYL0032"
+            ? "Exact replacements only"
+            : "Yes";
     }
 
     private static void WritePrecedenceAndSuppression(StringBuilder sb)

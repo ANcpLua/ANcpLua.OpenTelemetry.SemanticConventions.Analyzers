@@ -14,7 +14,7 @@ When published, consume it as a development-only analyzer dependency:
 <PackageReference Include="Qyl.OpenTelemetry.SemanticConventions.Analyzers"
                   Version="..."
                   PrivateAssets="all"
-                  IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+                  IncludeAssets="analyzers; buildtransitive" />
 ```
 
 For local evaluation from this checkout, reference the analyzer project directly from a consumer project:
@@ -64,7 +64,7 @@ activity.SetTag("error.message", message);                  // QYL0031; replacem
 - **Multi-hop rename resolution.** `SemconvMigrationCatalog.ResolveTerminalReplacement` chases `ExactRename` chains (e.g. `http.host` → `net.host.name` → `server.address`) so code-fixes land consumers on the terminal symbol, not on a still-deprecated mid-state. Cycles and chains over 8 hops bail at the last safe step.
 - **Structured changelog provenance.** Every `SemconvMigrationCatalogEntry` may carry an optional `SemconvChangelogEvidence` (commit / version / url / quote) pinning the migration claim to an exact upstream commit, so the catalog is auditable without re-parsing CHANGELOG.md.
 - **Catalog seeding from upstream.** `scripts/seed-catalog.sh <from-tag> <to-tag>` clones a shallow upstream `open-telemetry/semantic-conventions` checkout, slices CHANGELOG.md between two version tags, and emits C# (or `--format json`) skeleton entries with provenance pre-filled. Curate the `Kind`/`Domain`/`Signal`/`MigrationKind` fields by hand before merging.
-- **Generated docs and audit.** Regenerate the package catalog with `scripts/generate-docs.sh generate`; validate with `scripts/generate-docs.sh validate`; print the current 156-entry coverage audit with `scripts/generate-docs.sh audit`. Every `QYL*` rule has a stable `#qyl0010` anchor in the generated docs that every `DiagnosticDescriptor.HelpLinkUri` resolves to.
+- **Generated docs and audit.** Regenerate the package catalog with `scripts/generate-docs.sh generate`; validate with `scripts/generate-docs.sh validate`; print the current coverage audit with `scripts/generate-docs.sh audit`. Every `QYL*` rule has a stable `#qyl0010` anchor in the generated docs that every `DiagnosticDescriptor.HelpLinkUri` resolves to.
 - **netstandard2.0** only — required by Roslyn analyzer host. Microsoft.CodeAnalysis.* dependencies only.
 - **Multi-version friendly.** A consumer on SemConv 1.39.0 gets live metadata diagnostics scoped to the 1.39.0 surface; upgrading expands those diagnostics automatically. The supplemental catalog is a conservative v1.41.0 migration aid.
 
@@ -135,7 +135,7 @@ tests/WeaverRoundTrip/generate.sh
 # 4. Confirm the analyzer fires QYL0010 against the regenerated file:
 dotnet build Qyl.OpenTelemetry.SemanticConventions.Analyzers.slnx \
   -c Release -warnaserror:QYL0010
-dotnet test tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
+dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
   --filter 'FullyQualifiedName~WeaverRoundTrip'
 ```
 
@@ -147,7 +147,7 @@ Run the repository gates before changing diagnostics, catalog data, or generated
 
 ```bash
 dotnet build Qyl.OpenTelemetry.SemanticConventions.Analyzers.slnx -c Release
-dotnet test tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj
+dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj
 scripts/generate-docs.sh validate
 scripts/generate-docs.sh audit
 git diff --check
@@ -155,7 +155,7 @@ git diff --check
 
 ## Incubation
 
-This repository is the incubation home for what may eventually be proposed as an official `OpenTelemetry.SemanticConventions.Analyzers` companion to `opentelemetry-dotnet-contrib`. While here, it ships under the `ANcpLua.*` package ID and Apache-2.0 license.
+This repository is the incubation home for what may eventually be proposed as an official `OpenTelemetry.SemanticConventions.Analyzers` companion to `opentelemetry-dotnet-contrib`. While here, it ships under the `Qyl.*` package ID and Apache-2.0 license.
 
 ## License
 
