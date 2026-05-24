@@ -6,14 +6,14 @@ using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
-using OpenTelemetry.SemanticConventions.Analyzers;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 return DocsGenerator.Run(args);
 
 file static class DocsGenerator
 {
-    private const string PackageName = "ANcpLua.OpenTelemetry.SemanticConventions.Analyzers";
-    private const string ProjectRelativePath = "tools/" + PackageName + ".DocsGenerator";
+    private const string PackageName = "Qyl.OpenTelemetry.SemanticConventions.Analyzers";
+    private const string ProjectRelativePath = "tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator";
 
     public static int Run(string[] args)
     {
@@ -127,7 +127,7 @@ file static class DocsGenerator
         foreach (var d in descriptors)
         {
             var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id is "OTSC0030" or "OTSC0031" or "OTSC0032" ? "Exact replacements only" : "Yes"
+                ? d.Id == "QYL0030" ? "Exact replacements only" : "Yes"
                 : "No";
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
@@ -140,13 +140,13 @@ file static class DocsGenerator
     {
         sb.AppendLine("## Rule Reference");
         sb.AppendLine();
-        sb.AppendLine("Each rule below has a stable GitHub anchor (`#otsc0010`, `#otsc0011`, …) that every `DiagnosticDescriptor.HelpLinkUri` resolves to. Quick-fix \"Show error help\" links and IDE diagnostic tooltips deep-link straight to the matching sub-section.");
+        sb.AppendLine("Each rule below has a stable GitHub anchor (`#qyl0010`, `#qyl0011`, …) that every `DiagnosticDescriptor.HelpLinkUri` resolves to. Quick-fix \"Show error help\" links and IDE diagnostic tooltips deep-link straight to the matching sub-section.");
         sb.AppendLine();
         foreach (var d in descriptors)
         {
-            // GitHub anchor format: lowercased ID. Heading is "### OTSC0010" so
-            // the rendered anchor is `#otsc0010`. Keep the heading ID-only —
-            // appending the title would produce `#otsc0010--title-words` and
+            // GitHub anchor format: lowercased ID. Heading is "### QYL0010" so
+            // the rendered anchor is `#qyl0010`. Keep the heading ID-only —
+            // appending the title would produce `#qyl0010--title-words` and
             // break HelpLinkUri.
             sb.AppendLine($"### {d.Id}");
             sb.AppendLine();
@@ -155,7 +155,7 @@ file static class DocsGenerator
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
             var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id is "OTSC0030" or "OTSC0031" or "OTSC0032" ? "Exact replacements only." : "Yes."
+                ? d.Id == "QYL0030" ? "Exact replacements only." : "Yes."
                 : "No.";
             sb.AppendLine($"Code fix: {codeFix}");
             sb.AppendLine();
@@ -166,11 +166,11 @@ file static class DocsGenerator
     {
         sb.AppendLine("## Precedence and Suppression");
         sb.AppendLine();
-        sb.AppendLine("**Live metadata wins over the supplemental catalog.** When the consumer's referenced `OpenTelemetry.SemanticConventions` package marks a constant or value `[Obsolete]`, the supplemental catalog diagnostics (`OTSC0030`/`OTSC0031`/`OTSC0032`) skip that symbol entirely — only the live-metadata rules (`OTSC0010`/`OTSC0012`/`OTSC0014`) fire. No symbol produces two diagnostics for the same root cause.");
+        sb.AppendLine("**Live metadata wins over the supplemental catalog.** When the consumer's referenced `OpenTelemetry.SemanticConventions` package marks a constant or value `[Obsolete]`, the supplemental catalog diagnostics (`QYL0030`/`QYL0031`/`QYL0032`) skip that symbol entirely — only the live-metadata rules (`QYL0010`/`QYL0012`/`QYL0014`) fire. No symbol produces two diagnostics for the same root cause.");
         sb.AppendLine();
         sb.AppendLine("**Multi-hop renames resolve to the terminal symbol.** `SemconvMigrationCatalog.ResolveTerminalReplacement` walks `ExactRename` / `ExactValueRename` chains so a code fix on `http.host → net.host.name → server.address` lands consumers on `server.address`, not on the still-deprecated `net.host.name` mid-state. Cycles and chains over 8 hops bail at the last safe step.");
         sb.AppendLine();
-        sb.AppendLine("**Per-type suppressor for legacy shapes.** `SemconvLegacyContextSuppressor` recognises class/struct/record/method names matching well-known compatibility shapes (`Legacy*`, `*CompatShim`, `*MigrationFixture`, `*SchemaTranslator`, `*DeprecatedSemconv*`) and reports `Suppression`s for every OTSC* diagnostic inside them — no `#pragma` walls required. Pair it with `build_property.OtelSemConvLegacyMode = compatibility` when the *whole project* is a translator, and use the suppressor when only specific types intentionally emit older schemas inside an otherwise production project.");
+        sb.AppendLine("**Per-type suppressor for legacy shapes.** `SemconvLegacyContextSuppressor` recognises class/struct/record/method names matching well-known compatibility shapes (`Legacy*`, `*CompatShim`, `*MigrationFixture`, `*SchemaTranslator`, `*DeprecatedSemconv*`) and reports `Suppression`s for every QYL* diagnostic inside them — no `#pragma` walls required. Pair it with `build_property.OtelSemConvLegacyMode = compatibility` when the *whole project* is a translator, and use the suppressor when only specific types intentionally emit older schemas inside an otherwise production project.");
         sb.AppendLine();
         sb.AppendLine("**Structured provenance per catalog entry.** Each `SemconvMigrationCatalogEntry` carries an optional `SemconvChangelogEvidence` (commit / version / url / quote) pinning the claim to an upstream commit. The `scripts/seed-catalog.sh` script always emits this evidence when seeding new entries from `open-telemetry/semantic-conventions` CHANGELOG.md between two version tags.");
         sb.AppendLine();
@@ -180,10 +180,10 @@ file static class DocsGenerator
     {
         sb.AppendLine("## Severity Policy");
         sb.AppendLine();
-        sb.AppendLine("- `OTSC0010`, `OTSC0012`, and `OTSC0014` read `[Obsolete]` metadata from the referenced semantic-conventions assembly and keep their descriptor severities.");
-        sb.AppendLine("- `OTSC0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement, including exact attribute-value replacements when live metadata is absent.");
-        sb.AppendLine("- `OTSC0031` is used for context-sensitive migrations, removed/no-replacement entries, guidance-only cases, ambiguous payload dictionaries, and `compatibility` mode downgrades.");
-        sb.AppendLine("- `OTSC0032` is used for tests, fixtures, snapshots, migration maps, schema translators, compatibility shims, generated sources, and catalog-like code.");
+        sb.AppendLine("- `QYL0010`, `QYL0012`, and `QYL0014` read `[Obsolete]` metadata from the referenced semantic-conventions assembly and keep their descriptor severities.");
+        sb.AppendLine("- `QYL0030` is reserved for production telemetry emission where a supplemental catalog item has an exact one-to-one replacement, including exact attribute-value replacements when live metadata is absent.");
+        sb.AppendLine("- `QYL0031` is used for context-sensitive migrations, removed/no-replacement entries, guidance-only cases, ambiguous payload dictionaries, and `compatibility` mode downgrades.");
+        sb.AppendLine("- `QYL0032` is used for tests, fixtures, snapshots, migration maps, schema translators, compatibility shims, generated sources, and catalog-like code.");
         sb.AppendLine("- Generated semconv constant libraries may intentionally retain deprecated constants. Their existence is not itself a package bug.");
         sb.AppendLine("- Schema URL translators and code that explicitly emits older schemas are compatibility contexts and should not be escalated to production errors.");
     }
@@ -195,7 +195,8 @@ file static class DocsGenerator
         sb.AppendLine("| Option | Values | Behavior |");
         sb.AppendLine("| -- | -- | -- |");
         sb.AppendLine("| `build_property.OtelSemConvLegacyMode` | `production` (default), `compatibility`, `off` | `production` keeps production errors for exact supplemental migrations. `compatibility` downgrades production supplemental errors to warnings and keeps fixture contexts informational. `off` disables supplemental catalog diagnostics while leaving live `[Obsolete]` metadata rules enabled. |");
-        sb.AppendLine("| `build_property.IsTestProject` | `true`, `false` | Test projects downgrade supplemental catalog findings to `OTSC0032` info. Assembly names ending in `.Tests`, paths under `tests/`, and xUnit/NUnit/MSTest attributes are also treated as test context. |");
+        sb.AppendLine("| `build_property.IsTestProject` | `true`, `false` | Test projects downgrade supplemental catalog findings to `QYL0032` info. Assembly names ending in `.Tests`, paths under `tests/`, and xUnit/NUnit/MSTest attributes are also treated as test context. |");
+        sb.AppendLine("| `build_property.OtelSemConvNonAttributesTiers` | `false` (default), `true` | When `true`, extends `QYL0010` beyond `*Attributes` classes to also scan the four other Weaver source-generation tiers (`*Metrics`, `*Meters`, `*Events`, `*Activities`) under the SemConv namespace. Default `false` preserves the historic surface so existing consumers see no behaviour change. |");
     }
 
     private static void WriteExamples(StringBuilder sb)
@@ -212,28 +213,28 @@ file static class DocsGenerator
 
     private static readonly string[] s_examples =
     [
-        "activity.SetTag(HttpAttributes.AttributeHttpMethod, \"GET\"); // OTSC0010 from live [Obsolete] metadata.",
-        "activity.SetTag(\"http.method\", \"GET\");        // OTSC0012 when the referenced SemConv package marks the matching constant [Obsolete].",
-        "activity.SetBaggage(\"http.method\", \"GET\");    // OTSC0012 in baggage-like key/value APIs.",
-        "tagList.Add(\"http.method\", \"GET\");            // OTSC0012 in TagList/ActivityTagsCollection payloads.",
-        "activityTags[\"message.id\"] = \"42\";            // OTSC0031 in ActivityTagsCollection indexer payloads.",
-        "resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // OTSC0012 from live metadata in payloads.",
-        "activitySource.StartActivity(\"GET /users\", tags: new[] { new KeyValuePair<string, object?>(\"http.method\", \"GET\") }); // OTSC0012 in span-start tag payloads.",
-        "activitySource.StartActivity(\"GET /users\", tags: [new KeyValuePair<string, object?>(\"message.id\", \"42\")]); // OTSC0031 in C# collection-expression payloads.",
-        "var tags = new Dictionary<string, object?> { [\"cloud.platform\"] = \"azure_aks\" }; activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after local payload initializer expansion.",
-        "tags.Add(\"cloud.platform\", \"azure_aks\"); activitySource.StartActivity(\"GET /users\", tags: tags); // OTSC0030 after mutable local payload flow is proven.",
-        "new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // OTSC0014 from live value metadata.",
-        "new ActivityLink(context, tags: new[] { new KeyValuePair<string, object?>(\"message.id\", \"42\") }); // OTSC0031 in span link attribute payloads.",
-        "counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // OTSC0012 in metric instrument tag payloads.",
-        "histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // OTSC0030 supplemental value fallback in metric tag payloads.",
-        "logger.Log(LogLevel.Information, eventId, new[] { new KeyValuePair<string, object?>(\"event.name\", \"legacy.event\") }, exception, formatter); // OTSC0031 in visible ILogger state payloads.",
-        "logger.BeginScope(new[] { new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\") }); // OTSC0030 supplemental value fallback in logging scopes.",
-        "activity.SetTag(\"cloud.platform\", \"azure_aks\"); // OTSC0030 supplemental value fallback when live value metadata is absent.",
-        "activity.SetTag(\"error.message\", message);      // OTSC0031 because the replacement is domain-specific.",
-        "tags.Add(\"message.id\", \"42\");                 // OTSC0031 for ambiguous dictionaries until the payload flow is proven.",
-        "resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // OTSC0031 in a production resource payload.",
-        "new ActivityEvent(\"cache.prune\", tags: new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // OTSC0031 in event attribute payloads.",
-        "meter.CreateHistogram<long>(\"system.memory.shared\"); // OTSC0030; use \"system.memory.linux.shared\".",
+        "activity.SetTag(HttpAttributes.AttributeHttpMethod, \"GET\"); // QYL0010 from live [Obsolete] metadata.",
+        "activity.SetTag(\"http.method\", \"GET\");        // QYL0012 when the referenced SemConv package marks the matching constant [Obsolete].",
+        "activity.SetBaggage(\"http.method\", \"GET\");    // QYL0012 in baggage-like key/value APIs.",
+        "tagList.Add(\"http.method\", \"GET\");            // QYL0012 in TagList/ActivityTagsCollection payloads.",
+        "activityTags[\"message.id\"] = \"42\";            // QYL0031 in ActivityTagsCollection indexer payloads.",
+        "resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"http.method\"] = \"GET\" }); // QYL0012 from live metadata in payloads.",
+        "activitySource.StartActivity(\"GET /users\", tags: new[] { new KeyValuePair<string, object?>(\"http.method\", \"GET\") }); // QYL0012 in span-start tag payloads.",
+        "activitySource.StartActivity(\"GET /users\", tags: [new KeyValuePair<string, object?>(\"message.id\", \"42\")]); // QYL0031 in C# collection-expression payloads.",
+        "var tags = new Dictionary<string, object?> { [\"cloud.platform\"] = \"azure_aks\" }; activitySource.StartActivity(\"GET /users\", tags: tags); // QYL0030 after local payload initializer expansion.",
+        "tags.Add(\"cloud.platform\", \"azure_aks\"); activitySource.StartActivity(\"GET /users\", tags: tags); // QYL0030 after mutable local payload flow is proven.",
+        "new ActivityEvent(\"legacy.event\", tags: new Dictionary<string, object?> { [\"http.request.method\"] = \"_LEGACY_GET\" }); // QYL0014 from live value metadata.",
+        "new ActivityLink(context, tags: new[] { new KeyValuePair<string, object?>(\"message.id\", \"42\") }); // QYL0031 in span link attribute payloads.",
+        "counter.Add(1, new KeyValuePair<string, object?>(\"http.method\", \"GET\")); // QYL0012 in metric instrument tag payloads.",
+        "histogram.Record(1, new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\")); // QYL0030 supplemental value fallback in metric tag payloads.",
+        "logger.Log(LogLevel.Information, eventId, new[] { new KeyValuePair<string, object?>(\"event.name\", \"legacy.event\") }, exception, formatter); // QYL0031 in visible ILogger state payloads.",
+        "logger.BeginScope(new[] { new KeyValuePair<string, object?>(\"cloud.platform\", \"azure_aks\") }); // QYL0030 supplemental value fallback in logging scopes.",
+        "activity.SetTag(\"cloud.platform\", \"azure_aks\"); // QYL0030 supplemental value fallback when live value metadata is absent.",
+        "activity.SetTag(\"error.message\", message);      // QYL0031 because the replacement is domain-specific.",
+        "tags.Add(\"message.id\", \"42\");                 // QYL0031 for ambiguous dictionaries until the payload flow is proven.",
+        "resourceBuilder.AddAttributes(new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // QYL0031 in a production resource payload.",
+        "new ActivityEvent(\"cache.prune\", tags: new Dictionary<string, object?> { [\"message.id\"] = \"42\" }); // QYL0031 in event attribute payloads.",
+        "meter.CreateHistogram<long>(\"system.memory.shared\"); // QYL0030; use \"system.memory.linux.shared\".",
     ];
 
     private static void WriteCuratedSummary(StringBuilder sb, CatalogStatistics stats)
@@ -253,12 +254,12 @@ file static class DocsGenerator
         sb.AppendLine("| Requirement | Current generated evidence |");
         sb.AppendLine("| -- | -- |");
         sb.AppendLine($"| Preserve the 156 curated changelog-entry scope | `SemconvMigrationCatalog.Validate()` requires exactly `{SemconvMigrationCatalog.ExpectedCuratedMentionCount}` curated rows; current generated count is `{stats.Entries.Length}`. |");
-        sb.AppendLine($"| Prefer live `[Obsolete]` metadata where available | `{stats.Metadata}` of `{stats.Entries.Length}` curated rows are classified as `DeprecatedButGenerated`; `OTSC0010`, `OTSC0012`, and `OTSC0014` remain the live-metadata diagnostics. |");
+        sb.AppendLine($"| Prefer live `[Obsolete]` metadata where available | `{stats.Metadata}` of `{stats.Entries.Length}` curated rows are classified as `DeprecatedButGenerated`; `QYL0010`, `QYL0012`, and `QYL0014` remain the live-metadata diagnostics. |");
         sb.AppendLine($"| Use supplemental diagnostics only where metadata is insufficient | `{stats.Supplemental}` curated rows are supplemental diagnostics: `{stats.Exact}` exact replacement, `{stats.Manual}` manual/context-sensitive, `{stats.Removed}` removed/no-replacement, `{stats.Guidance}` guidance-only. |");
         sb.AppendLine($"| Keep attribute-value fallback separate from the curated name/key/event/metric count | `{stats.ValueEntries.Length}` supplemental attribute-value rows are outside the 156-entry inventory and are used only when live value metadata is absent. |");
-        sb.AppendLine("| Keep severity context-sensitive | `OTSC0030` is production exact replacement error, `OTSC0031` is production manual-review warning, and `OTSC0032` is compatibility/test/generated info. |");
+        sb.AppendLine("| Keep severity context-sensitive | `QYL0030` is production exact replacement error, `QYL0031` is production manual-review warning, and `QYL0032` is compatibility/test/generated info. |");
         sb.AppendLine("| Keep code fixes exact-only | `LiveSemconvMetadataCodeFixProvider` registers fixes only when live `[Obsolete]` metadata exposes an exact replacement; `SupplementalSemconvMigrationCodeFixProvider` registers fixes only when diagnostic properties mark `ExactRename` or `ExactValueRename` and provide one replacement literal. |");
-        sb.AppendLine("| Keep old-schema compatibility non-error | Test, fixture, migration, compatibility, translator, generated, catalog, and explicit older schema URL contexts select `OTSC0032`. |");
+        sb.AppendLine("| Keep old-schema compatibility non-error | Test, fixture, migration, compatibility, translator, generated, catalog, and explicit older schema URL contexts select `QYL0032`. |");
         sb.AppendLine();
         sb.AppendLine("| Migration kind | Curated count |");
         sb.AppendLine("| -- | --: |");
@@ -330,7 +331,7 @@ file static class DocsGenerator
     {
         sb.AppendLine("## Supplemental Attribute Value Fallback");
         sb.AppendLine();
-        sb.AppendLine("These value rows are intentionally separate from the 156-entry name/key/event/metric inventory. `OTSC0014` remains primary when the referenced package exposes `[Obsolete]` value constants; the supplemental analyzer uses this table only when live value metadata is absent.");
+        sb.AppendLine("These value rows are intentionally separate from the 156-entry name/key/event/metric inventory. `QYL0014` remains primary when the referenced package exposes `[Obsolete]` value constants; the supplemental analyzer uses this table only when live value metadata is absent.");
         sb.AppendLine();
         sb.AppendLine("| Old value | Signal | Domain | Migration | Replacement | Evidence |");
         sb.AppendLine("| -- | -- | -- | -- | -- | -- |");
@@ -350,8 +351,8 @@ file static class DocsGenerator
         sb.AppendLine("Regenerate with:");
         sb.AppendLine();
         sb.AppendLine("```bash");
-        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath}");
-        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath} -- --check");
+        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator");
+        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator -- --check");
         sb.AppendLine("```");
         sb.AppendLine();
         sb.AppendLine("The `--check` mode fails if the generated markdown differs from the checked-in file.");
@@ -392,7 +393,7 @@ file static class DocsGenerator
 
             foreach (var id in provider.FixableDiagnosticIds)
             {
-                if (id.StartsWith("OTSC", StringComparison.Ordinal))
+                if (id.StartsWith("QYL", StringComparison.Ordinal))
                 {
                     ids.Add(id);
                 }

@@ -3,7 +3,9 @@
 
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class SemconvMigrationCatalogTests
 {

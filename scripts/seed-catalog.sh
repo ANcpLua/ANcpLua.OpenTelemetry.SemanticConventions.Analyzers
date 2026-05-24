@@ -9,7 +9,7 @@
 # already filled in (commit SHA, version tag, evidence quote). You curate the
 # Kind/Domain/Signal/MigrationKind values by hand because changelog text alone
 # isn't precise enough to infer them, and a mis-guess here would ship false
-# OTSC0030 errors into every consumer's build.
+# QYL0030 errors into every consumer's build.
 #
 # Usage:
 #   scripts/seed-catalog.sh <from-tag> <to-tag> [--format csharp|json] [--out <path>]

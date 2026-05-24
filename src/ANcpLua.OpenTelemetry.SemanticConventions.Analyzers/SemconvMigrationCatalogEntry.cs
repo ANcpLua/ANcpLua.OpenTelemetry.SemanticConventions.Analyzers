@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 internal enum SemconvMigrationItemKind
 {

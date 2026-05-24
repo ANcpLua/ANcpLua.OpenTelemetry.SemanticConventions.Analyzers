@@ -1,15 +1,15 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0012: Flags telemetry attribute key literals whose values match a
+/// QYL0012: Flags telemetry attribute key literals whose values match a
 /// semantic-convention attribute name that is marked <c>[Obsolete]</c> in the
 /// consumer's resolved <c>OpenTelemetry.SemanticConventions</c> assembly.
 /// </summary>
 /// <remarks>
-/// Distinct from <see cref="DeprecatedSemconvAnalyzer"/> (OTSC0010), which fires
+/// Distinct from <see cref="DeprecatedSemconvAnalyzer"/> (QYL0010), which fires
 /// on direct typed-constant references. This rule catches the case where the
 /// consumer hardcodes a literal, bypassing the typed constant entirely — a common
 /// pattern in legacy code that the OTel SDK's <c>SetTag(string, …)</c> overloads encourage.
@@ -160,7 +160,7 @@ public sealed class LiteralMatchesDeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         Dictionary<string, string> deprecationMap,
         TelemetryAttributePayloadLiteral payload)
     {
-        // Only fire on bare literals; OTSC0010 already handles typed-constant references.
+        // Only fire on bare literals; QYL0010 already handles typed-constant references.
         if (!payload.KeyIsBareLiteral
             || !deprecationMap.TryGetValue(payload.Key, out var deprecationMessage))
         {

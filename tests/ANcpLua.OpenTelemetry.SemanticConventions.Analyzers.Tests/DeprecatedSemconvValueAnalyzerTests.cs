@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class DeprecatedSemconvValueAnalyzerTests
 {
@@ -85,7 +87,7 @@ public class DeprecatedSemconvValueAnalyzerTests
         """;
 
     [Fact]
-    public async Task DeprecatedValue_Reports_OTSC0014()
+    public async Task DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -98,7 +100,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -134,7 +136,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("__GET", "http.request.method", "Replaced by GET.");
 
@@ -187,7 +189,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task AddBaggage_DeprecatedValue_Reports_OTSC0014()
+    public async Task AddBaggage_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -200,7 +202,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -212,7 +214,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityTagsCollection_Add_DeprecatedValue_Reports_OTSC0014()
+    public async Task ActivityTagsCollection_Add_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -225,7 +227,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -237,7 +239,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ResourceBuilder_AddAttributes_DeprecatedValue_Reports_OTSC0014()
+    public async Task ResourceBuilder_AddAttributes_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -255,7 +257,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -267,7 +269,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityEvent_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivityEvent_Tags_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -285,7 +287,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -297,7 +299,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityLink_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivityLink_Tags_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -312,7 +314,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -324,7 +326,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityTagsCollection_Indexer_DeprecatedValue_Reports_OTSC0014()
+    public async Task ActivityTagsCollection_Indexer_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -337,7 +339,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -349,7 +351,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivitySource_StartActivity_Tags_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -367,7 +369,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -379,7 +381,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -397,7 +399,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -409,7 +411,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -425,7 +427,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -437,7 +439,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Local_Collection_Expression_DeprecatedValue_Reports_OTSC0014_Once()
+    public async Task ActivitySource_StartActivity_Local_Collection_Expression_DeprecatedValue_Reports_QYL0014_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -455,7 +457,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -467,7 +469,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task MetricCounter_Add_DeprecatedValue_Reports_OTSC0014()
+    public async Task MetricCounter_Add_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -480,7 +482,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -492,7 +494,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task Measurement_Tags_DeprecatedValue_Reports_OTSC0014()
+    public async Task Measurement_Tags_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -505,7 +507,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 
@@ -517,7 +519,7 @@ public class DeprecatedSemconvValueAnalyzerTests
     }
 
     [Fact]
-    public async Task Logger_Log_State_DeprecatedValue_Reports_OTSC0014()
+    public async Task Logger_Log_State_DeprecatedValue_Reports_QYL0014()
     {
         const string testCode = SemconvFixture + """
 
@@ -536,7 +538,7 @@ public class DeprecatedSemconvValueAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0014", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0014", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("_LEGACY_GET", "http.request.method", "Use the canonical RFC 9110 verb 'GET'.");
 

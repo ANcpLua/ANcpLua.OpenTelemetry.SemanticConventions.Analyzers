@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0010: Flags references to <c>[Obsolete]</c> <c>const string</c> fields under
+/// QYL0010: Flags references to <c>[Obsolete]</c> <c>const string</c> fields under
 /// <c>OpenTelemetry.SemanticConventions.Attributes.*</c>.
 /// </summary>
 /// <remarks>
@@ -25,10 +25,17 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(AnalyzeFieldReference, OperationKind.FieldReference);
+        context.RegisterCompilationStartAction(start =>
+        {
+            var allowNonAttributesTiers = SemconvAnalyzerOptions.ShouldAllowNonAttributesTiers(
+                start.Options.AnalyzerConfigOptionsProvider.GlobalOptions);
+            start.RegisterOperationAction(
+                ctx => AnalyzeFieldReference(ctx, allowNonAttributesTiers),
+                OperationKind.FieldReference);
+        });
     }
 
-    private static void AnalyzeFieldReference(OperationAnalysisContext context)
+    private static void AnalyzeFieldReference(OperationAnalysisContext context, bool allowNonAttributesTiers)
     {
         var operation = (IFieldReferenceOperation)context.Operation;
         var field = operation.Field;
@@ -39,7 +46,7 @@ public sealed class DeprecatedSemconvAnalyzer : DiagnosticAnalyzer
         }
 
         var containingType = field.ContainingType;
-        if (containingType is null || !SemconvNamespace.IsAttributesType(containingType))
+        if (containingType is null || !SemconvNamespace.IsAttributesType(containingType, allowNonAttributesTiers))
         {
             return;
         }

@@ -15,21 +15,21 @@ namespace Consumer;
 /// </summary>
 public static class IntentionalViolations
 {
-    // EXPECT: OTSC0010 (deprecated semconv constant — http.method replaced by http.request.method)
-    public static void DeprecatedHttpMethod_FiresOTSC0010(Activity activity)
+    // EXPECT: QYL0010 (deprecated semconv constant — http.method replaced by http.request.method)
+    public static void DeprecatedHttpMethod_FiresQYL0010(Activity activity)
     {
         activity?.SetTag(HttpAttributes.AttributeHttpMethod, "GET");
     }
 
-    // EXPECT: OTSC0010 (NetSockHostAddr is deprecated, replaced by network.local.address)
-    public static void DeprecatedNetSockHostAddr_FiresOTSC0010(Activity activity)
+    // EXPECT: QYL0010 (NetSockHostAddr is deprecated, replaced by network.local.address)
+    public static void DeprecatedNetSockHostAddr_FiresQYL0010(Activity activity)
     {
         activity?.SetTag(NetAttributes.AttributeNetSockHostAddr, "10.0.0.1");
     }
 
-    // EXPECT: OTSC0011 ×2 (literal "http.request.method" and "http.response.status_code"
+    // EXPECT: QYL0011 ×2 (literal "http.request.method" and "http.response.status_code"
     //                      should be the typed constants)
-    public static void HardcodedLiterals_FireOTSC0011(Activity activity)
+    public static void HardcodedLiterals_FireQYL0011(Activity activity)
     {
         activity?.SetTag("http.request.method", "POST");
         activity?.SetTag("http.response.status_code", 200);
@@ -42,8 +42,8 @@ public static class IntentionalViolations
         activity?.SetTag(HttpAttributes.AttributeHttpResponseStatusCode, 200);
     }
 
-    // EXPECT: OTSC0005 (RPC server span sets client.address)
-    public static void RpcServerWithClientAddress_FiresOTSC0005(Activity activity)
+    // EXPECT: QYL0005 (RPC server span sets client.address)
+    public static void RpcServerWithClientAddress_FiresQYL0005(Activity activity)
     {
         activity?.SetTag("rpc.system", "grpc");
         activity?.SetTag("rpc.service", "Greeter");
@@ -51,8 +51,8 @@ public static class IntentionalViolations
         activity?.SetTag("server.address", "0.0.0.0");
     }
 
-    // EXPECT: OTSC0001 (gen_ai.execute_tool span without gen_ai.tool.name)
-    public static void GenAiExecuteToolWithoutName_FiresOTSC0001(Activity activity)
+    // EXPECT: QYL0001 (gen_ai.execute_tool span without gen_ai.tool.name)
+    public static void GenAiExecuteToolWithoutName_FiresQYL0001(Activity activity)
     {
         activity?.SetTag("gen_ai.operation.name", "execute_tool");
         activity?.SetTag("gen_ai.system", "openai");
@@ -66,8 +66,8 @@ public static class IntentionalViolations
         activity?.SetTag("gen_ai.system", "openai");
     }
 
-    // EXPECT: OTSC0002 (graphql.document is opt-in, surface as Info)
-    public static void GraphqlDocument_FiresOTSC0002(Activity activity, string query)
+    // EXPECT: QYL0002 (graphql.document is opt-in, surface as Info)
+    public static void GraphqlDocument_FiresQYL0002(Activity activity, string query)
     {
         activity?.SetTag("graphql.document", query);
     }
@@ -79,14 +79,14 @@ public static class IntentionalViolations
         activity?.SetTag("graphql.operation.type", "query");
     }
 
-    // STRESS: a method that combines OTSC0001, OTSC0005, OTSC0011 in one block
+    // STRESS: a method that combines QYL0001, QYL0005, QYL0011 in one block
     public static void Combined_FireMultiple(Activity activity)
     {
-        activity?.SetTag("rpc.system", "grpc");                           // OTSC0011 (literal -> RpcAttributes)
-        activity?.SetTag("rpc.service", "Greeter");                       // OTSC0011
-        activity?.SetTag("client.address", "10.0.0.1");                   // OTSC0005 + OTSC0011
-        activity?.SetTag("client.port", 54321);                           // OTSC0005 + OTSC0011
-        activity?.SetTag("gen_ai.operation.name", "execute_tool");        // OTSC0001 (no tool name) + OTSC0011
-        activity?.SetTag("gen_ai.system", "openai");                      // OTSC0011
+        activity?.SetTag("rpc.system", "grpc");                           // QYL0011 (literal -> RpcAttributes)
+        activity?.SetTag("rpc.service", "Greeter");                       // QYL0011
+        activity?.SetTag("client.address", "10.0.0.1");                   // QYL0005 + QYL0011
+        activity?.SetTag("client.port", 54321);                           // QYL0005 + QYL0011
+        activity?.SetTag("gen_ai.operation.name", "execute_tool");        // QYL0001 (no tool name) + QYL0011
+        activity?.SetTag("gen_ai.system", "openai");                      // QYL0011
     }
 }

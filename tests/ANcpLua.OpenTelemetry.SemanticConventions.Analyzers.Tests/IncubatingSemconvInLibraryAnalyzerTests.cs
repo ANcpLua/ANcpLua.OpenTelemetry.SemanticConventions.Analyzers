@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class IncubatingSemconvInLibraryAnalyzerTests
 {
@@ -26,7 +28,7 @@ public class IncubatingSemconvInLibraryAnalyzerTests
         """;
 
     [Fact]
-    public async Task LibraryProject_References_Incubating_Reports_OTSC0021()
+    public async Task LibraryProject_References_Incubating_Reports_QYL0021()
     {
         const string testCode = IncubatingFixture + """
 
@@ -39,7 +41,7 @@ public class IncubatingSemconvInLibraryAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0021", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0021", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("OpenTelemetry.SemanticConventions.Incubating.GenAiAttributes.AttributeGenAiPrompt");
 
@@ -51,7 +53,7 @@ public class IncubatingSemconvInLibraryAnalyzerTests
     }
 
     [Fact]
-    public async Task LocalConstCopy_Suppresses_OTSC0021()
+    public async Task LocalConstCopy_Suppresses_QYL0021()
     {
         const string testCode = IncubatingFixture + """
 

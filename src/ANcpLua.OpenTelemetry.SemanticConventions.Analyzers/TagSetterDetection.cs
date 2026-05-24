@@ -3,7 +3,7 @@
 
 using MsOperationExtensions = Microsoft.CodeAnalysis.Operations.OperationExtensions;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
 /// Shared detection helpers for tag-setter callsites across the analyzers.

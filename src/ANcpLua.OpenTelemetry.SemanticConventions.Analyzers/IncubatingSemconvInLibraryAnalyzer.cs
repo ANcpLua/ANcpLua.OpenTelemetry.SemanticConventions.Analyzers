@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0021: Flags references to members under any
+/// QYL0021: Flags references to members under any
 /// <c>*.SemanticConventions.Incubating</c> namespace from within library projects
 /// (non-exe, non-test). The recommended mitigation is to copy the constant locally;
 /// the analyzer suppresses itself when the usage is inside a <c>const</c> field

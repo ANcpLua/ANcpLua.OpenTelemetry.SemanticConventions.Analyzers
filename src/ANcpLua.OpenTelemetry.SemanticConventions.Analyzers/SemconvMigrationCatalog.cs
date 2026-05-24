@@ -1,9 +1,9 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-using ANcpLua.Analyzers.Analyzers;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 internal static class SemconvMigrationCatalog
 {
@@ -200,7 +200,7 @@ internal static class SemconvMigrationCatalog
             return true;
         }
 
-        // OTSC0005 owns the v1.41.0 RPC server-span client.* removal directly.
+        // QYL0005 owns the v1.41.0 RPC server-span client.* removal directly.
         if (entry.OldName is "client.address" or "client.port")
         {
             return true;

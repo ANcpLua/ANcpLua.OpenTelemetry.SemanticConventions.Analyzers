@@ -1,0 +1,18 @@
+groups:
+  - id: registry.http
+    type: attribute_group
+    brief: HTTP attribute registry — round-trip smoke fixture.
+    attributes:
+      - id: http.method
+        type: string
+        stability: stable
+        brief: Deprecated alias for http.request.method.
+        examples: ["GET", "POST"]
+        deprecated:
+          reason: renamed
+          renamed_to: http.request.method
+      - id: http.request.method
+        type: string
+        stability: stable
+        brief: HTTP request method.
+        examples: ["GET", "POST"]

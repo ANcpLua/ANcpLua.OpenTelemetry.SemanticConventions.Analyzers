@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0011: When a string literal used as a telemetry attribute key matches a
+/// QYL0011: When a string literal used as a telemetry attribute key matches a
 /// known <c>const string</c> field exposed by
 /// <c>OpenTelemetry.SemanticConventions.Attributes.*</c>, suggest the typed constant.
 /// </summary>

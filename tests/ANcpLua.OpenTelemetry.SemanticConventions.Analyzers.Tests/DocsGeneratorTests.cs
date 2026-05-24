@@ -4,7 +4,9 @@
 using System.Diagnostics;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class DocsGeneratorTests
 {
@@ -79,7 +81,7 @@ public class DocsGeneratorTests
         var current = new DirectoryInfo(start);
         while (current is not null)
         {
-            if (File.Exists(Path.Combine(current.FullName, "ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.slnx")))
+            if (File.Exists(Path.Combine(current.FullName, "Qyl.OpenTelemetry.SemanticConventions.Analyzers.slnx")))
             {
                 return current.FullName;
             }

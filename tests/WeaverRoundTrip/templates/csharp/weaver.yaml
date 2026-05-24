@@ -1,0 +1,7 @@
+file_format: 1.0.0
+templates:
+  - template: HttpAttributes.cs.j2
+    application_mode: single
+    filter: |
+      .groups
+      | map(select(.id == "registry.http"))

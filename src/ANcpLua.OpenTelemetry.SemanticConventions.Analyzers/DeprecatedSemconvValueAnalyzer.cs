@@ -1,10 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-namespace OpenTelemetry.SemanticConventions.Analyzers;
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// OTSC0014: Flags telemetry attribute payloads where the value is a constant
+/// QYL0014: Flags telemetry attribute payloads where the value is a constant
 /// string that matches a deprecated member of the corresponding
 /// <c>*Values</c> nested class on the SemConv attribute type.
 /// </summary>

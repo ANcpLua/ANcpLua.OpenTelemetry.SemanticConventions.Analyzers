@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class LiteralMatchesDeprecatedSemconvAnalyzerTests
 {
@@ -79,7 +81,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
         """;
 
     [Fact]
-    public async Task BareLiteral_DeprecatedName_Reports_OTSC0012()
+    public async Task BareLiteral_DeprecatedName_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -92,7 +94,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -148,7 +150,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -161,9 +163,9 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task TypedConstant_Skipped_By_OTSC0012()
+    public async Task TypedConstant_Skipped_By_QYL0012()
     {
-        // Typed constants are OTSC0010's job. OTSC0012 only fires on bare literals.
+        // Typed constants are QYL0010's job. QYL0012 only fires on bare literals.
         const string testCode = SemconvFixture + """
 
             class C
@@ -182,7 +184,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task SetBaggage_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task SetBaggage_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -195,7 +197,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -207,7 +209,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task TagList_Add_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task TagList_Add_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -220,7 +222,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -232,7 +234,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ResourceBuilder_AddAttributes_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task ResourceBuilder_AddAttributes_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -248,7 +250,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -260,7 +262,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityEvent_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivityEvent_Tags_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -278,7 +280,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -290,7 +292,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityLink_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivityLink_Tags_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -305,7 +307,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -317,7 +319,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivityTagsCollection_Indexer_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task ActivityTagsCollection_Indexer_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -330,7 +332,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -342,7 +344,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivitySource_StartActivity_Tags_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -360,7 +362,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -372,7 +374,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivitySource_StartActivity_Local_Dictionary_Tags_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -390,7 +392,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -402,7 +404,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivitySource_StartActivity_Mutable_Dictionary_Indexer_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -418,7 +420,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -430,7 +432,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task ActivitySource_StartActivity_Collection_Expression_DeprecatedLiteralKey_Reports_OTSC0012_Once()
+    public async Task ActivitySource_StartActivity_Collection_Expression_DeprecatedLiteralKey_Reports_QYL0012_Once()
     {
         const string testCode = SemconvFixture + """
 
@@ -445,7 +447,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -457,7 +459,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Payload_TypedConstantKey_Remains_Skipped_By_OTSC0012()
+    public async Task Payload_TypedConstantKey_Remains_Skipped_By_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -482,7 +484,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task MetricCounter_Add_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task MetricCounter_Add_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -495,7 +497,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -507,7 +509,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Measurement_Tags_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task Measurement_Tags_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -520,7 +522,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 
@@ -532,7 +534,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
     }
 
     [Fact]
-    public async Task Logger_Log_State_DeprecatedLiteralKey_Reports_OTSC0012()
+    public async Task Logger_Log_State_DeprecatedLiteralKey_Reports_QYL0012()
     {
         const string testCode = SemconvFixture + """
 
@@ -551,7 +553,7 @@ public class LiteralMatchesDeprecatedSemconvAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0012", DiagnosticSeverity.Warning)
+        var expected = new DiagnosticResult("QYL0012", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("http.method", "Replaced by http.request.method.");
 

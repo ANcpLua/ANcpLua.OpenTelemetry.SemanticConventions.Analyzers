@@ -10,3 +10,4 @@ obj/
 # Local NuGet cache
 .nuget/
 packages/
+.tools/

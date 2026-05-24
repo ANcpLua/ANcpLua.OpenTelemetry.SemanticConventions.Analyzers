@@ -6,7 +6,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace OpenTelemetry.SemanticConventions.Analyzers.Tests;
+using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
+
+namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests;
 
 public class GraphqlDocumentOptInAnalyzerTests
 {
@@ -18,7 +20,7 @@ public class GraphqlDocumentOptInAnalyzerTests
         """;
 
     [Fact]
-    public async Task GraphqlDocument_SetTag_Reports_OTSC0002()
+    public async Task GraphqlDocument_SetTag_Reports_QYL0002()
     {
         const string testCode = FakeSpanShim + """
 
@@ -31,7 +33,7 @@ public class GraphqlDocumentOptInAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0002", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0002", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GraphqlDocumentOptInAnalyzer, DefaultVerifier>
@@ -81,7 +83,7 @@ public class GraphqlDocumentOptInAnalyzerTests
             }
             """;
 
-        var expected = new DiagnosticResult("OTSC0002", DiagnosticSeverity.Info)
+        var expected = new DiagnosticResult("QYL0002", DiagnosticSeverity.Info)
             .WithLocation(0);
 
         await new CSharpAnalyzerTest<GraphqlDocumentOptInAnalyzer, DefaultVerifier>
