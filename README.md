@@ -85,6 +85,62 @@ build_property.OtelSemConvLegacyMode = production
 
 `build_property.IsTestProject = true`, assembly names ending in `.Tests`, paths under `tests/`, and xUnit/NUnit/MSTest attributed methods or types are treated as test context for supplemental catalog severity.
 
+| MSBuild property | Default | Behavior |
+|---|---|---|
+| `build_property.OtelSemConvNonAttributesTiers` | `false` | Extends `OTSC0010` beyond `*Attributes` classes to also scan the four other Weaver tiers (`*Metrics`, `*Meters`, `*Events`, `*Activities`) under the SemConv namespace. Default `false` preserves the historic surface so existing consumers see no behaviour change. |
+
+## Producer-agnostic seam
+
+The analyzers bind to producers by namespace shape and type-name suffix, never via a project reference. Any assembly that places a class under one of the recognised SemConv namespace shapes — Weaver-generated, the official `OpenTelemetry.SemanticConventions` NuGet, a hand-rolled qyl helper, anything — is in scope.
+
+### Recognised namespace shapes
+
+`SemconvNamespace.IsInSemconvNamespace` matches four shapes against the root literal `OpenTelemetry.SemanticConventions`:
+
+| Shape | Example namespace | Producer it captures |
+|---|---|---|
+| `s == Root` | `OpenTelemetry.SemanticConventions` | A producer that puts `*Attributes` directly under the bare root |
+| `s.StartsWith(Root + ".")` | `OpenTelemetry.SemanticConventions.Attributes` | Upstream's conventional `.Attributes` sub-namespace |
+| `s.Contains("." + Root + ".")` | `Qyl.OpenTelemetry.SemanticConventions.Http.Attributes` | A consumer-side nested layout |
+| `s.EndsWith("." + Root)` | `Qyl.OpenTelemetry.SemanticConventions` | A consumer-side trailing layout |
+
+Every branch is covered by a smoke test in `tests/.../DeprecatedSemconvAnalyzerTests.cs`; a regression in any of the four becomes a red test, not a silent loss of `OTSC0010`/`0011`/`0012`/`0014` coverage for that shape.
+
+### Type-name suffix constraint
+
+By default `SemconvNamespace.IsAttributesType` requires `type.Name.EndsWith("Attributes")`. Weaver SourceGeneration emits five tiers per stability band (`*Attributes`, `*Metrics`, `*Meters`, `*Events`, `*Activities`); setting `build_property.OtelSemConvNonAttributesTiers = true` extends the suffix check to the other four.
+
+### Accepted `[Obsolete]` note formats
+
+`SemconvCodeFixHelpers.TryExtractExactReplacement` accepts these shapes (case-insensitive prefix, optional trailing period, optional backticks/quotes around the replacement):
+
+- `Replaced by http.request.method.`
+- `` Replaced by `http.request.method`. `` *(Weaver's default form)*
+- `Use <c>http.request.method</c> instead.`
+
+It explicitly rejects ambiguous or unfamiliar shapes (`Use 'X' instead.`, `Migrated to X.`, `Replaced by X and Y.`, `Deprecated.`, empty / whitespace). The diagnostic still fires for rejected shapes — only the code-fix is silently withheld, because guessing the replacement string from a freeform note would ship false fixes into consumer codebases. The full accept/reject contract is pinned in `tests/.../SemconvCodeFixHelpersTests.cs`.
+
+### Manual Weaver round-trip
+
+```bash
+# 1. Validate the local registry against the OTel schema:
+weaver registry check -r tests/WeaverRoundTrip/model
+
+# 2. (optional) Inspect the resolved registry:
+weaver registry resolve -r tests/WeaverRoundTrip/model --quiet
+
+# 3. Regenerate tests/WeaverRoundTrip/generated/HttpAttributes.cs:
+tests/WeaverRoundTrip/generate.sh
+
+# 4. Confirm the analyzer fires OTSC0010 against the regenerated file:
+dotnet build ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.slnx \
+  -c Release -warnaserror:OTSC0010
+dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
+  --filter 'FullyQualifiedName~WeaverRoundTrip'
+```
+
+CI runs `.github/workflows/weaver-roundtrip.yml` with the same sequence on every push that touches `src/**`, the fixture, or the test, plus `.github/workflows/supplemental-catalog-drift.yml` on a weekly cron so a silent upstream YAML addition surfaces between releases rather than at consumer-build time.
+
 ## Validation
 
 Run the repository gates before changing diagnostics, catalog data, or generated documentation:
