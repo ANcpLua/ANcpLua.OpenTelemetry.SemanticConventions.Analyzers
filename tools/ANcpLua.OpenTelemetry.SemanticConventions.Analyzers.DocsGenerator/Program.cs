@@ -126,11 +126,7 @@ file static class DocsGenerator
         sb.AppendLine("| -- | -- | -- | -- | -- |");
         foreach (var d in descriptors)
         {
-            var codeFix = d.Id == "QYL0030" && fixableIds.Contains(d.Id)
-                ? "Exact replacements only"
-                : fixableIds.Contains(d.Id) && d.Id is not "QYL0031" and not "QYL0032"
-                ? "Yes"
-                : "No";
+            var codeFix = GetCodeFixLabel(d.Id, fixableIds);
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
     }
@@ -156,14 +152,24 @@ file static class DocsGenerator
             sb.AppendLine();
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
-            var codeFix = d.Id == "QYL0030" && fixableIds.Contains(d.Id)
-                ? "Exact replacements only."
-                : fixableIds.Contains(d.Id) && d.Id is not "QYL0031" and not "QYL0032"
-                ? "Yes."
-                : "No.";
-            sb.AppendLine($"Code fix: {codeFix}");
+            sb.AppendLine($"Code fix: {GetCodeFixLabel(d.Id, fixableIds)}.");
             sb.AppendLine();
+        }
+    }
 
+    private static string GetCodeFixLabel(string diagnosticId, HashSet<string> fixableIds)
+    {
+        if (diagnosticId == "QYL0030" && fixableIds.Contains(diagnosticId))
+        {
+            return "Exact replacements only";
+        }
+
+        if (fixableIds.Contains(diagnosticId) && diagnosticId is not "QYL0031" and not "QYL0032")
+        {
+            return "Yes";
+        }
+
+        return "No";
     }
 
     private static void WritePrecedenceAndSuppression(StringBuilder sb)
