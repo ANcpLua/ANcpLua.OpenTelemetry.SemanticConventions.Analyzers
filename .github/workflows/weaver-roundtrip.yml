@@ -1,0 +1,61 @@
+name: Weaver round-trip
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/WeaverRoundTrip/**'
+      - 'tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/WeaverRoundTripTests.cs'
+      - 'src/**'
+      - '.github/workflows/weaver-roundtrip.yml'
+  pull_request:
+    paths:
+      - 'tests/WeaverRoundTrip/**'
+      - 'tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/WeaverRoundTripTests.cs'
+      - 'src/**'
+      - '.github/workflows/weaver-roundtrip.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  weaver-roundtrip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read pinned Weaver version
+        id: pin
+        run: echo "version=$(cat tests/WeaverRoundTrip/.weaver-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Weaver ${{ steps.pin.outputs.version }}
+        run: |
+          set -euo pipefail
+          v="${{ steps.pin.outputs.version }}"
+          url="https://github.com/open-telemetry/weaver/releases/download/v${v}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          mkdir -p "$RUNNER_TEMP/weaver"
+          curl -sSLf "$url" -o "$RUNNER_TEMP/weaver.tar.xz"
+          tar -xJf "$RUNNER_TEMP/weaver.tar.xz" -C "$RUNNER_TEMP/weaver" --strip-components=1
+          install -m 0755 "$RUNNER_TEMP/weaver/weaver" /usr/local/bin/weaver
+          weaver --version
+
+      - name: Regenerate the round-trip fixture
+        run: tests/WeaverRoundTrip/generate.sh
+
+      - name: Assert the committed fixture is in sync with the regeneration
+        run: |
+          if ! git diff --exit-code tests/WeaverRoundTrip/generated/; then
+            echo "::error::Weaver-generated fixture drifted from the checked-in file."
+            echo "::error::Run 'tests/WeaverRoundTrip/generate.sh' locally and commit the result."
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run the round-trip analyzer assertion
+        run: |
+          dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
+            -c Release \
+            --filter 'FullyQualifiedName~WeaverRoundTrip'
