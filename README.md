@@ -14,7 +14,7 @@ When published, consume it as a development-only analyzer dependency:
 <PackageReference Include="Qyl.OpenTelemetry.SemanticConventions.Analyzers"
                   Version="..."
                   PrivateAssets="all"
-                  IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+                  IncludeAssets="analyzers; buildtransitive" />
 ```
 
 For local evaluation from this checkout, reference the analyzer project directly from a consumer project:
@@ -40,8 +40,8 @@ The package-level generated catalog is in [`docs/Qyl.OpenTelemetry.SemanticConve
 | [`QYL0014`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0014) | Warning | Yes | Hard-coded value matches a semantic-convention value constant marked `[Obsolete]` |
 | [`QYL0021`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0021) | Warning | No | Library directly references incubating semantic-convention members |
 | [`QYL0030`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0030) | Error | Exact replacements only | Supplemental catalog exact replacement in production telemetry emission |
-| [`QYL0031`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0031) | Warning | Exact replacements only | Supplemental catalog context-sensitive, manual-review, removed/no-replacement, or ambiguous payload migration |
-| [`QYL0032`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0032) | Info | Exact replacements only | Supplemental catalog item appears in test, fixture, compatibility, generated, translator, or catalog context |
+| [`QYL0031`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0031) | Warning | No | Supplemental catalog context-sensitive, manual-review, removed/no-replacement, or ambiguous payload migration |
+| [`QYL0032`](docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0032) | Info | No | Supplemental catalog item appears in test, fixture, compatibility, generated, translator, or catalog context |
 
 ## Examples
 
@@ -135,7 +135,7 @@ tests/WeaverRoundTrip/generate.sh
 # 4. Confirm the analyzer fires QYL0010 against the regenerated file:
 dotnet build Qyl.OpenTelemetry.SemanticConventions.Analyzers.slnx \
   -c Release -warnaserror:QYL0010
-dotnet test tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
+dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj \
   --filter 'FullyQualifiedName~WeaverRoundTrip'
 ```
 
@@ -147,7 +147,7 @@ Run the repository gates before changing diagnostics, catalog data, or generated
 
 ```bash
 dotnet build Qyl.OpenTelemetry.SemanticConventions.Analyzers.slnx -c Release
-dotnet test tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests/Qyl.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj
+dotnet test tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.Tests.csproj
 scripts/generate-docs.sh validate
 scripts/generate-docs.sh audit
 git diff --check
@@ -155,7 +155,7 @@ git diff --check
 
 ## Incubation
 
-This repository is the incubation home for what may eventually be proposed as an official `OpenTelemetry.SemanticConventions.Analyzers` companion to `opentelemetry-dotnet-contrib`. While here, it ships under the `ANcpLua.*` package ID and Apache-2.0 license.
+This repository is the incubation home for what may eventually be proposed as an official `OpenTelemetry.SemanticConventions.Analyzers` companion to `opentelemetry-dotnet-contrib`. While here, it ships under the `Qyl.*` package ID and Apache-2.0 license.
 
 ## License
 

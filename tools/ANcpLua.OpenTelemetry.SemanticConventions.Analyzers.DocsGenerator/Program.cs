@@ -13,7 +13,7 @@ return DocsGenerator.Run(args);
 file static class DocsGenerator
 {
     private const string PackageName = "Qyl.OpenTelemetry.SemanticConventions.Analyzers";
-    private const string ProjectRelativePath = "tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator";
+    private const string ProjectRelativePath = "tools/" + PackageName + ".DocsGenerator";
 
     public static int Run(string[] args)
     {
@@ -126,9 +126,7 @@ file static class DocsGenerator
         sb.AppendLine("| -- | -- | -- | -- | -- |");
         foreach (var d in descriptors)
         {
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only" : "Yes"
-                : "No";
+            var codeFix = GetCodeFixLabel(d.Id, fixableIds);
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
     }
@@ -154,10 +152,8 @@ file static class DocsGenerator
             sb.AppendLine();
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only." : "Yes."
-                : "No.";
-            sb.AppendLine($"Code fix: {codeFix}");
+            var codeFix = GetCodeFixLabel(d.Id, fixableIds);
+            sb.AppendLine($"Code fix: {codeFix}.");
             sb.AppendLine();
         }
     }
@@ -351,8 +347,8 @@ file static class DocsGenerator
         sb.AppendLine("Regenerate with:");
         sb.AppendLine();
         sb.AppendLine("```bash");
-        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator");
-        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator -- --check");
+        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath}");
+        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath} -- --check");
         sb.AppendLine("```");
         sb.AppendLine();
         sb.AppendLine("The `--check` mode fails if the generated markdown differs from the checked-in file.");
@@ -428,10 +424,20 @@ file static class DocsGenerator
             ? "-"
             : Escape(string.Join(", ", names.Select(n => "`" + n + "`")));
 
+    // QYL0030 has a code fix for exact one-to-one replacements only.
+    // QYL0031 and QYL0032 are registered in FixableDiagnosticIds for the
+    // supplemental provider, but only activate when the catalog entry is an
+    // ExactRename — they are not user-visible as general automatic code fixes.
+    private static string GetCodeFixLabel(string id, HashSet<string> fixableIds) =>
+        id == "QYL0030" ? "Exact replacements only"
+        : id is "QYL0031" or "QYL0032" ? "No"
+        : fixableIds.Contains(id) ? "Yes"
+        : "No";
+
     private static string Escape(string value) =>
         value.Replace("\r", " ", StringComparison.Ordinal)
             .Replace("\n", " ", StringComparison.Ordinal)
-            .Replace("|", "\\|", StringComparison.Ordinal);
+
 }
 
 file enum Mode { Generate, Check, Audit }
