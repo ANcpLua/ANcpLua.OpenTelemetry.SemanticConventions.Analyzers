@@ -2,7 +2,7 @@
 namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-///     AL0083: Detects HTTP endpoints used where HTTPS is expected.
+///     QYL0083: Detects HTTP endpoints used where HTTPS is expected.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -47,7 +47,7 @@ public sealed class Al0083InsecureEndpointAnalyzer : AlAnalyzer {
         "ServerUrl"
     ];
 
-    /// <summary>The diagnostic identifier for AL0083.</summary>
+    /// <summary>The diagnostic identifier for QYL0083.</summary>
     private const string DiagnosticId = "QYL0083";
 
     private static readonly DiagnosticDescriptor s_rule = CreateRule(

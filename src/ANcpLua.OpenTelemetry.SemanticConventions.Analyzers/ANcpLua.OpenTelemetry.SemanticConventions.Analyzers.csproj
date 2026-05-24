@@ -5,8 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <RootNamespace>OpenTelemetry.SemanticConventions.Analyzers</RootNamespace>
-    <AssemblyName>OpenTelemetry.SemanticConventions.Analyzers</AssemblyName>
+    <RootNamespace>Qyl.OpenTelemetry.SemanticConventions.Analyzers</RootNamespace>
+    <AssemblyName>Qyl.OpenTelemetry.SemanticConventions.Analyzers</AssemblyName>
 
     <PackageId>Qyl.OpenTelemetry.SemanticConventions.Analyzers</PackageId>
     <Description>Roslyn diagnostic analyzers for OpenTelemetry.SemanticConventions consumers — flags deprecated attribute usage, v1.41.0 breaking-change violations, and broader OTel observability/instrumentation patterns at compile time.</Description>

@@ -77,7 +77,8 @@ static string FindRepoRoot()
     var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
     while (dir is not null)
     {
-        if (File.Exists(Path.Combine(dir.FullName, "ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.slnx")))
+        if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+            File.Exists(Path.Combine(dir.FullName, "scripts", ".upstream-semconv-version")))
         {
             return dir.FullName;
         }
@@ -114,7 +115,7 @@ static void ExtractFromYaml(string file, SortedSet<string> entries)
     catch (Exception ex)
     {
         Console.Error.WriteLine($"skipping {file}: {ex.Message}");
-        return;
+        throw;
     }
 
     foreach (var doc in stream.Documents)

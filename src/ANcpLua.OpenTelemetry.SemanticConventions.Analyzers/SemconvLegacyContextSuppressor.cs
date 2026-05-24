@@ -4,9 +4,9 @@
 namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-/// Suppresses every <c>QYL*</c> diagnostic when it fires inside a class, struct,
-/// record, or member whose name is one of the well-known legacy/compatibility
-/// shapes that intentionally model an older schema:
+/// Suppresses a curated set of specific legacy QYL diagnostic IDs when they fire
+/// inside a class, struct, record, or member whose name is one of the well-known
+/// legacy/compatibility shapes that intentionally model an older schema:
 ///
 /// <list type="bullet">
 ///   <item><c>Legacy*</c> / <c>*Legacy</c> (e.g. <c>LegacyTelemetryShim</c>)</item>

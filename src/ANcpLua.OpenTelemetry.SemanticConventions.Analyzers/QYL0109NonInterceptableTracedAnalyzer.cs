@@ -2,7 +2,7 @@
 namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-///     AL0109: Detects [Traced] on abstract, extern, or partial definition methods that cannot be intercepted.
+///     QYL0109: Detects [Traced] on abstract, extern, or partial definition methods that cannot be intercepted.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -30,7 +30,7 @@ namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class Al0109NonInterceptableTracedAnalyzer : AlAnalyzer {
-    /// <summary>The diagnostic identifier for AL0109.</summary>
+    /// <summary>The diagnostic identifier for QYL0109.</summary>
     public const string DiagnosticId = "QYL0109";
 
     private const string TracedAttributeFullName = "Qyl.Instrumentation.Instrumentation.TracedAttribute";

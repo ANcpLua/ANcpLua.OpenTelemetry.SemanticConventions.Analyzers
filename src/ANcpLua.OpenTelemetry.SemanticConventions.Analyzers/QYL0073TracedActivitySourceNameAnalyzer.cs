@@ -2,7 +2,7 @@
 namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>
-///     AL0073: Validates [Traced] attribute has non-empty ActivitySourceName.
+///     QYL0073: Validates [Traced] attribute has non-empty ActivitySourceName.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -26,7 +26,7 @@ namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class Al0073TracedActivitySourceNameAnalyzer : AlAnalyzer {
-    /// <summary>The diagnostic identifier for AL0073.</summary>
+    /// <summary>The diagnostic identifier for QYL0073.</summary>
     public const string DiagnosticId = "QYL0073";
 
     private const string TracedAttributeFullName = "Qyl.Instrumentation.Instrumentation.TracedAttribute";

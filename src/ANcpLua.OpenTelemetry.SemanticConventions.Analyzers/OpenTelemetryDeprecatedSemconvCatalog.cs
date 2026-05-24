@@ -1,5 +1,3 @@
-using Qyl.OpenTelemetry.SemanticConventions.Analyzers;
-
 namespace Qyl.OpenTelemetry.SemanticConventions.Analyzers;
 
 /// <summary>

@@ -13,7 +13,7 @@ return DocsGenerator.Run(args);
 file static class DocsGenerator
 {
     private const string PackageName = "Qyl.OpenTelemetry.SemanticConventions.Analyzers";
-    private const string ProjectRelativePath = "tools/" + PackageName + ".DocsGenerator";
+    private const string ProjectRelativePath = "tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator";
 
     public static int Run(string[] args)
     {
@@ -127,7 +127,7 @@ file static class DocsGenerator
         foreach (var d in descriptors)
         {
             var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id is "QYL0030" or "QYL0031" or "QYL0032" ? "Exact replacements only" : "Yes"
+                ? d.Id == "QYL0030" ? "Exact replacements only" : "Yes"
                 : "No";
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
@@ -155,7 +155,7 @@ file static class DocsGenerator
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
             var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id is "QYL0030" or "QYL0031" or "QYL0032" ? "Exact replacements only." : "Yes."
+                ? d.Id == "QYL0030" ? "Exact replacements only." : "Yes."
                 : "No.";
             sb.AppendLine($"Code fix: {codeFix}");
             sb.AppendLine();
@@ -351,8 +351,8 @@ file static class DocsGenerator
         sb.AppendLine("Regenerate with:");
         sb.AppendLine();
         sb.AppendLine("```bash");
-        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath}");
-        sb.AppendLine($"dotnet run -c Release --project {ProjectRelativePath} -- --check");
+        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator");
+        sb.AppendLine($"dotnet run -c Release --project tools/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.DocsGenerator -- --check");
         sb.AppendLine("```");
         sb.AppendLine();
         sb.AppendLine("The `--check` mode fails if the generated markdown differs from the checked-in file.");
