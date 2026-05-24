@@ -28,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.0" />
-    <PackageReference Include="ANcpLua.Roslyn.Utilities" Version="2.2.9" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.8" />
+    <PackageReference Include="ANcpLua.Roslyn.Utilities" Version="2.2.22" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- Direct analyzer project references do not copy analyzer dependencies into
