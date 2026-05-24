@@ -33,7 +33,7 @@ The package-level generated catalog is in [`docs/ANcpLua.OpenTelemetry.SemanticC
 |---|---|---|---|
 | [`OTSC0001`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0001) | Warning | No | `gen_ai.execute_tool` span requires `gen_ai.tool.name` for v1.41.0 span naming |
 | [`OTSC0002`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0002) | Info | No | `graphql.document` is opt-in because it may carry sensitive/high-cardinality user input |
-| [`OTSC0005`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0005) | Warning | No | RPC server span sets `client.address`/`client.port`, which was removed from RPC server spans in v1.41.0 |
+| [`OTSC0005`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0005) | Warning | No | RPC server span sets `client.address`/`client.port`, which were removed from RPC server spans in v1.41.0 |
 | [`OTSC0010`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0010) | Warning | Yes | Direct typed reference to a semantic-convention constant marked `[Obsolete]` |
 | [`OTSC0011`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0011) | Info | No | Hard-coded key matches a typed semantic-convention constant |
 | [`OTSC0012`](docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0012) | Warning | Yes | Hard-coded key matches a semantic-convention constant marked `[Obsolete]` |
