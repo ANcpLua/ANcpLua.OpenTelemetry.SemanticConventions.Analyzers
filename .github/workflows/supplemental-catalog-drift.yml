@@ -1,0 +1,51 @@
+name: Supplemental catalog drift
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/regen-supplemental-catalog.csx'
+      - 'scripts/.upstream-semconv-version'
+      - 'scripts/.upstream-deprecated-extract.txt'
+      - '.github/workflows/supplemental-catalog-drift.yml'
+  pull_request:
+    paths:
+      - 'scripts/regen-supplemental-catalog.csx'
+      - 'scripts/.upstream-semconv-version'
+      - 'scripts/.upstream-deprecated-extract.txt'
+      - '.github/workflows/supplemental-catalog-drift.yml'
+  schedule:
+    # Weekly Monday 04:13 UTC — catches upstream additions of new deprecated
+    # entries between releases of this analyzer package. A red scheduled run is
+    # the early signal that scripts/.upstream-deprecated-extract.txt needs to
+    # be regenerated and the supplemental catalog updated to match.
+    - cron: '13 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dotnet-script
+        run: dotnet tool install -g dotnet-script
+
+      - name: Regenerate the upstream-deprecated extract
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet-script scripts/regen-supplemental-catalog.csx
+
+      - name: Assert the committed extract is in sync with upstream
+        run: |
+          if ! git diff --exit-code scripts/.upstream-deprecated-extract.txt; then
+            echo "::error::Upstream semantic-conventions @ $(cat scripts/.upstream-semconv-version) added or changed deprecated entries."
+            echo "::error::Run 'dotnet-script scripts/regen-supplemental-catalog.csx' locally, review the diff, then update src/.../Imports/Semconv/OpenTelemetryDeprecatedSemconvCatalog.cs and commit both the new extract and the catalog update."
+            exit 1
+          fi
