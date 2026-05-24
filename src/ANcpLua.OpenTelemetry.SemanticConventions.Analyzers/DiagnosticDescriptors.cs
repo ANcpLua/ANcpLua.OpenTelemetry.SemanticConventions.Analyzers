@@ -6,7 +6,14 @@ namespace OpenTelemetry.SemanticConventions.Analyzers;
 internal static class DiagnosticDescriptors
 {
     private const string Category = "OpenTelemetry.SemanticConventions";
-    private const string HelpLinkBase = "https://github.com/ANcpLua/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers/blob/main/docs/";
+
+    // Each rule anchors into the single generated docs file:
+    //   docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#otsc0010
+    // The DocsGenerator emits a "### OTSC0010" sub-section per descriptor so the
+    // GitHub-style anchor exists. Keep this base in sync with that generator.
+    private const string HelpLinkBase =
+        "https://github.com/ANcpLua/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers"
+        + "/blob/main/docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#";
 
     public static readonly DiagnosticDescriptor DeprecatedSemconvConstant = new(
         id: "OTSC0010",
@@ -16,7 +23,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "References to constants in OpenTelemetry.SemanticConventions.Attributes.* that carry [Obsolete]. Migrate to the replacement attribute named in the deprecation message.",
-        helpLinkUri: HelpLinkBase + "OTSC0010.md");
+        helpLinkUri: HelpLinkBase + "otsc0010");
 
     public static readonly DiagnosticDescriptor RpcServerHasClientAddressAttribute = new(
         id: "OTSC0005",
@@ -26,7 +33,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "From v1.41.0, RPC server spans extend the rpc base group directly and no longer include client.address or client.port. Use server.address / server.port instead.",
-        helpLinkUri: HelpLinkBase + "OTSC0005.md");
+        helpLinkUri: HelpLinkBase + "otsc0005");
 
     public static readonly DiagnosticDescriptor GenAiExecuteToolMissingToolName = new(
         id: "OTSC0001",
@@ -36,7 +43,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "v1.41.0 made gen_ai.tool.name a required attribute on the gen_ai.execute_tool internal span; the canonical span name is 'execute_tool {gen_ai.tool.name}'.",
-        helpLinkUri: HelpLinkBase + "OTSC0001.md");
+        helpLinkUri: HelpLinkBase + "otsc0001");
 
     public static readonly DiagnosticDescriptor GraphqlDocumentIsOptIn = new(
         id: "OTSC0002",
@@ -46,7 +53,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: "graphql.document carries user-inputted, potentially sensitive, high-cardinality content. v1.41.0 moved its requirement level from recommended to opt_in. Capture only behind an explicit opt-in flag with sanitization.",
-        helpLinkUri: HelpLinkBase + "OTSC0002.md");
+        helpLinkUri: HelpLinkBase + "otsc0002");
 
     public static readonly DiagnosticDescriptor PreferSemconvConstant = new(
         id: "OTSC0011",
@@ -56,7 +63,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: "When a telemetry attribute key literal matches a known semantic-convention attribute name from OpenTelemetry.SemanticConventions.Attributes.*, prefer the typed constant for refactor-safety and discoverability.",
-        helpLinkUri: HelpLinkBase + "OTSC0011.md");
+        helpLinkUri: HelpLinkBase + "otsc0011");
 
     public static readonly DiagnosticDescriptor LiteralMatchesDeprecatedSemconv = new(
         id: "OTSC0012",
@@ -66,7 +73,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "When a telemetry attribute key literal matches a semantic-convention attribute that is marked [Obsolete] in the consumer's referenced OpenTelemetry.SemanticConventions package, the call site needs migration regardless of whether a typed constant is being used.",
-        helpLinkUri: HelpLinkBase + "OTSC0012.md");
+        helpLinkUri: HelpLinkBase + "otsc0012");
 
     public static readonly DiagnosticDescriptor DeprecatedSemconvValue = new(
         id: "OTSC0014",
@@ -76,7 +83,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "A constant string used as the value of a known semantic-convention telemetry attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class.",
-        helpLinkUri: HelpLinkBase + "OTSC0014.md");
+        helpLinkUri: HelpLinkBase + "otsc0014");
 
     public static readonly DiagnosticDescriptor IncubatingSemconvInLibrary = new(
         id: "OTSC0021",
@@ -86,7 +93,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "Members under any *.SemanticConventions.Incubating namespace may rename or change values across minor package releases. Library projects (non-exe, non-test) baking direct references push that volatility onto every downstream consumer.",
-        helpLinkUri: HelpLinkBase + "OTSC0021.md");
+        helpLinkUri: HelpLinkBase + "otsc0021");
 
     public static readonly DiagnosticDescriptor SupplementalExactSemconvMigration = new(
         id: "OTSC0030",
@@ -96,7 +103,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         description: "A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog and has a one-to-one replacement. This supplements, but does not replace, [Obsolete] metadata from OpenTelemetry.SemanticConventions.",
-        helpLinkUri: HelpLinkBase + "OTSC0030.md");
+        helpLinkUri: HelpLinkBase + "otsc0030");
 
     public static readonly DiagnosticDescriptor SupplementalManualSemconvMigration = new(
         id: "OTSC0031",
@@ -106,7 +113,7 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement.",
-        helpLinkUri: HelpLinkBase + "OTSC0031.md");
+        helpLinkUri: HelpLinkBase + "otsc0031");
 
     public static readonly DiagnosticDescriptor SupplementalCompatibilitySemconvMigration = new(
         id: "OTSC0032",
@@ -116,5 +123,5 @@ internal static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: "A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled.",
-        helpLinkUri: HelpLinkBase + "OTSC0032.md");
+        helpLinkUri: HelpLinkBase + "otsc0032");
 }

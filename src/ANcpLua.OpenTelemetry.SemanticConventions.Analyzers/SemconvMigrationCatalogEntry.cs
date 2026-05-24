@@ -48,6 +48,35 @@ internal readonly struct SemconvMigrationCatalogEntry
         string changelogEvidence,
         DiagnosticSeverity defaultProductionSeverity,
         DiagnosticSeverity fixtureSeverity)
+        : this(
+            oldName,
+            kind,
+            signal,
+            domain,
+            sinceVersion,
+            replacementNames,
+            migrationKind,
+            changelogVersion,
+            changelogEvidence,
+            defaultProductionSeverity,
+            fixtureSeverity,
+            evidence: SemconvChangelogEvidence.None)
+    {
+    }
+
+    public SemconvMigrationCatalogEntry(
+        string oldName,
+        SemconvMigrationItemKind kind,
+        string signal,
+        string domain,
+        string sinceVersion,
+        ImmutableArray<string> replacementNames,
+        SemconvMigrationKind migrationKind,
+        string changelogVersion,
+        string changelogEvidence,
+        DiagnosticSeverity defaultProductionSeverity,
+        DiagnosticSeverity fixtureSeverity,
+        SemconvChangelogEvidence evidence)
     {
         OldName = oldName;
         Kind = kind;
@@ -60,6 +89,7 @@ internal readonly struct SemconvMigrationCatalogEntry
         ChangelogEvidence = changelogEvidence;
         DefaultProductionSeverity = defaultProductionSeverity;
         FixtureSeverity = fixtureSeverity;
+        Evidence = evidence;
     }
 
     public string OldName { get; }
@@ -78,7 +108,22 @@ internal readonly struct SemconvMigrationCatalogEntry
 
     public string ChangelogVersion { get; }
 
+    /// <summary>
+    /// Human-readable summary surfaced in docs and diagnostic messages.
+    /// For the machine-checkable origin (commit SHA + permalink + raw quote)
+    /// see <see cref="Evidence"/>.
+    /// </summary>
     public string ChangelogEvidence { get; }
+
+    /// <summary>
+    /// Structured provenance (commit / version / url / quote). When
+    /// <see cref="SemconvChangelogEvidence.IsPresent"/> is true, the docs
+    /// generator renders it as a hyperlink; auditors can verify the catalog
+    /// claim against the pinned upstream commit without re-parsing the
+    /// CHANGELOG.md by hand. Optional for back-compat with older catalog
+    /// entries — older entries default to <see cref="SemconvChangelogEvidence.None"/>.
+    /// </summary>
+    public SemconvChangelogEvidence Evidence { get; }
 
     public DiagnosticSeverity DefaultProductionSeverity { get; }
 

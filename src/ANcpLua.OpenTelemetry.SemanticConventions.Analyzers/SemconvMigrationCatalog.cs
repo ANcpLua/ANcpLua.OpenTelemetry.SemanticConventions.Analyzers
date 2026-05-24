@@ -66,6 +66,58 @@ internal static class SemconvMigrationCatalog
         entry.MigrationKind != SemconvMigrationKind.DeprecatedButGenerated
         && entry.Kind != SemconvMigrationItemKind.GuidanceOnly;
 
+    /// <summary>
+    /// Follow <see cref="SemconvMigrationKind.ExactRename"/> /
+    /// <see cref="SemconvMigrationKind.ExactValueRename"/> chains transitively
+    /// so the code-fix lands consumers on the terminal symbol, not on a still-deprecated
+    /// mid-state symbol from a multi-version rename like
+    /// <c>http.host → net.host.name → server.address</c>.
+    ///
+    /// Returns the terminal entry's single replacement name. If <paramref name="oldName"/>
+    /// has no exact-replacement entry, returns <paramref name="oldName"/> unchanged.
+    /// If a cycle is detected (catalog bug) or the chain length exceeds
+    /// <c>MaxResolutionDepth</c>, returns the last safe replacement found.
+    /// </summary>
+    public static string ResolveTerminalReplacement(string oldName)
+    {
+        const int MaxResolutionDepth = 8;
+
+        if (string.IsNullOrEmpty(oldName))
+        {
+            return oldName;
+        }
+
+        var visited = new HashSet<string>(StringComparer.Ordinal) { oldName };
+        var current = oldName;
+
+        for (var step = 0; step < MaxResolutionDepth; step++)
+        {
+            if (!s_entriesByOldName.TryGetValue(current, out var entry))
+            {
+                return current;
+            }
+
+            if (!entry.HasExactReplacement)
+            {
+                return current;
+            }
+
+            var next = entry.ReplacementNames[0];
+            if (string.IsNullOrEmpty(next) || !visited.Add(next))
+            {
+                // Cycle or empty replacement; bail out at the last known-good name.
+                return current;
+            }
+
+            current = next;
+        }
+
+        // Hit the depth ceiling: chain too long, return the last name reached
+        // rather than loop forever. A real chain longer than 8 hops is almost
+        // certainly a catalog data bug worth surfacing in `Validate()`.
+        return current;
+    }
+
     public static void Validate()
     {
         if (Entries.Length != ExpectedCuratedMentionCount)

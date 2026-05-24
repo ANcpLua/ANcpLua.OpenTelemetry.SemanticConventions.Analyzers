@@ -20,6 +20,110 @@ This package analyzes OpenTelemetry semantic-convention usage in C# consumers. T
 | OTSC0031 | Warning | Semantic convention migration needs review | Exact replacements only | A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement. |
 | OTSC0032 | Info | Legacy semantic convention appears in compatibility or test code | Exact replacements only | A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled. |
 
+## Rule Reference
+
+Each rule below has a stable GitHub anchor (`#otsc0010`, `#otsc0011`, …) that every `DiagnosticDescriptor.HelpLinkUri` resolves to. Quick-fix "Show error help" links and IDE diagnostic tooltips deep-link straight to the matching sub-section.
+
+### OTSC0001
+
+**gen_ai.execute_tool span requires gen_ai.tool.name** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+v1.41.0 made gen_ai.tool.name a required attribute on the gen_ai.execute_tool internal span; the canonical span name is 'execute_tool {gen_ai.tool.name}'.
+
+Code fix: No.
+
+### OTSC0002
+
+**graphql.document is opt-in** — *Info, category `OpenTelemetry.SemanticConventions`*
+
+graphql.document carries user-inputted, potentially sensitive, high-cardinality content. v1.41.0 moved its requirement level from recommended to opt_in. Capture only behind an explicit opt-in flag with sanitization.
+
+Code fix: No.
+
+### OTSC0005
+
+**RPC server span must not include client.address / client.port** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+From v1.41.0, RPC server spans extend the rpc base group directly and no longer include client.address or client.port. Use server.address / server.port instead.
+
+Code fix: No.
+
+### OTSC0010
+
+**Deprecated semantic-convention constant** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+References to constants in OpenTelemetry.SemanticConventions.Attributes.* that carry [Obsolete]. Migrate to the replacement attribute named in the deprecation message.
+
+Code fix: Yes.
+
+### OTSC0011
+
+**Prefer typed semantic-convention constant over string literal** — *Info, category `OpenTelemetry.SemanticConventions`*
+
+When a telemetry attribute key literal matches a known semantic-convention attribute name from OpenTelemetry.SemanticConventions.Attributes.*, prefer the typed constant for refactor-safety and discoverability.
+
+Code fix: No.
+
+### OTSC0012
+
+**String literal matches a deprecated semantic-convention name** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+When a telemetry attribute key literal matches a semantic-convention attribute that is marked [Obsolete] in the consumer's referenced OpenTelemetry.SemanticConventions package, the call site needs migration regardless of whether a typed constant is being used.
+
+Code fix: Yes.
+
+### OTSC0014
+
+**Deprecated semantic-convention value** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+A constant string used as the value of a known semantic-convention telemetry attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class.
+
+Code fix: Yes.
+
+### OTSC0021
+
+**Incubating semantic-convention member used in a library** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+Members under any *.SemanticConventions.Incubating namespace may rename or change values across minor package releases. Library projects (non-exe, non-test) baking direct references push that volatility onto every downstream consumer.
+
+Code fix: No.
+
+### OTSC0030
+
+**Obsolete semantic convention has an exact replacement** — *Error, category `OpenTelemetry.SemanticConventions`*
+
+A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog and has a one-to-one replacement. This supplements, but does not replace, [Obsolete] metadata from OpenTelemetry.SemanticConventions.
+
+Code fix: Exact replacements only.
+
+### OTSC0031
+
+**Semantic convention migration needs review** — *Warning, category `OpenTelemetry.SemanticConventions`*
+
+A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement.
+
+Code fix: Exact replacements only.
+
+### OTSC0032
+
+**Legacy semantic convention appears in compatibility or test code** — *Info, category `OpenTelemetry.SemanticConventions`*
+
+A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled.
+
+Code fix: Exact replacements only.
+
+
+## Precedence and Suppression
+
+**Live metadata wins over the supplemental catalog.** When the consumer's referenced `OpenTelemetry.SemanticConventions` package marks a constant or value `[Obsolete]`, the supplemental catalog diagnostics (`OTSC0030`/`OTSC0031`/`OTSC0032`) skip that symbol entirely — only the live-metadata rules (`OTSC0010`/`OTSC0012`/`OTSC0014`) fire. No symbol produces two diagnostics for the same root cause.
+
+**Multi-hop renames resolve to the terminal symbol.** `SemconvMigrationCatalog.ResolveTerminalReplacement` walks `ExactRename` / `ExactValueRename` chains so a code fix on `http.host → net.host.name → server.address` lands consumers on `server.address`, not on the still-deprecated `net.host.name` mid-state. Cycles and chains over 8 hops bail at the last safe step.
+
+**Per-type suppressor for legacy shapes.** `SemconvLegacyContextSuppressor` recognises class/struct/record/method names matching well-known compatibility shapes (`Legacy*`, `*CompatShim`, `*MigrationFixture`, `*SchemaTranslator`, `*DeprecatedSemconv*`) and reports `Suppression`s for every OTSC* diagnostic inside them — no `#pragma` walls required. Pair it with `build_property.OtelSemConvLegacyMode = compatibility` when the *whole project* is a translator, and use the suppressor when only specific types intentionally emit older schemas inside an otherwise production project.
+
+**Structured provenance per catalog entry.** Each `SemconvMigrationCatalogEntry` carries an optional `SemconvChangelogEvidence` (commit / version / url / quote) pinning the claim to an upstream commit. The `scripts/seed-catalog.sh` script always emits this evidence when seeding new entries from `open-telemetry/semantic-conventions` CHANGELOG.md between two version tags.
+
+
 ## Severity Policy
 
 - `OTSC0010`, `OTSC0012`, and `OTSC0014` read `[Obsolete]` metadata from the referenced semantic-conventions assembly and keep their descriptor severities.
