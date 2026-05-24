@@ -190,6 +190,48 @@ public class DeprecatedSemconvAnalyzerTests
     }
 
     // Guards SemconvNamespace.IsInSemconvNamespace branch:
+    //   s == Root
+    // The producer puts the *Attributes type directly under the bare semconv
+    // root with no further nesting. The base SemconvFixture above exercises
+    // the StartsWith(Root + ".") branch via the conventional `*.Attributes`
+    // sub-namespace, but `== Root` itself was not directly covered.
+    [Fact]
+    public async Task Reference_To_Obsolete_In_Exact_Root_Semconv_Namespace_Reports_OTSC0010()
+    {
+        const string testCode = """
+            #pragma warning disable CS0618
+            namespace OpenTelemetry.SemanticConventions
+            {
+                public static class HttpAttributes
+                {
+                    [System.Obsolete("Replaced by http.request.method.")]
+                    public const string AttributeHttpMethod = "http.method";
+
+                    public const string AttributeHttpRequestMethod = "http.request.method";
+                }
+            }
+
+            class C
+            {
+                void M()
+                {
+                    var x = OpenTelemetry.SemanticConventions.HttpAttributes.{|#0:AttributeHttpMethod|};
+                }
+            }
+            """;
+
+        var expected = new DiagnosticResult("OTSC0010", DiagnosticSeverity.Warning)
+            .WithLocation(0)
+            .WithArguments("HttpAttributes.AttributeHttpMethod", "Replaced by http.request.method.");
+
+        await new CSharpAnalyzerTest<DeprecatedSemconvAnalyzer, DefaultVerifier>
+        {
+            TestCode = testCode,
+            ExpectedDiagnostics = { expected },
+        }.RunAsync();
+    }
+
+    // Guards SemconvNamespace.IsInSemconvNamespace branch:
     //   s.Contains("." + Root + ".", StringComparison.Ordinal)
     // This is the consumer-side nested layout documented at SemconvNamespace.cs
     // ("e.g. qyl"). If the .Contains branch regresses, every nested-namespace
