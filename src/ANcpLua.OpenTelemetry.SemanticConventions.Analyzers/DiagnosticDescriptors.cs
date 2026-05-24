@@ -8,12 +8,12 @@ internal static class DiagnosticDescriptors
     private const string Category = "OpenTelemetry.SemanticConventions";
 
     // Each rule anchors into the single generated docs file:
-    //   docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0010
+    //   docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#qyl0010
     // The DocsGenerator emits a "### QYL0010" sub-section per descriptor so the
     // GitHub-style anchor exists. Keep this base in sync with that generator.
     private const string HelpLinkBase =
         "https://github.com/ANcpLua/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers"
-        + "/blob/main/docs/ANcpLua.OpenTelemetry.SemanticConventions.Analyzers.md#";
+        + "/blob/main/docs/Qyl.OpenTelemetry.SemanticConventions.Analyzers.md#";
 
     public static readonly DiagnosticDescriptor DeprecatedSemconvConstant = new(
         id: "QYL0010",
