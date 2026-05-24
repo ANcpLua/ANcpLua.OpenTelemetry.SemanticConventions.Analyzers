@@ -126,8 +126,10 @@ file static class DocsGenerator
         sb.AppendLine("| -- | -- | -- | -- | -- |");
         foreach (var d in descriptors)
         {
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only" : "Yes"
+            var codeFix = d.Id == "QYL0030" && fixableIds.Contains(d.Id)
+                ? "Exact replacements only"
+                : fixableIds.Contains(d.Id) && d.Id is not "QYL0031" and not "QYL0032"
+                ? "Yes"
                 : "No";
             sb.AppendLine($"| {d.Id} | {d.DefaultSeverity} | {Escape(d.Title.ToString())} | {codeFix} | {Escape(d.Description.ToString())} |");
         }
@@ -154,12 +156,14 @@ file static class DocsGenerator
             sb.AppendLine();
             sb.AppendLine(Escape(d.Description.ToString()));
             sb.AppendLine();
-            var codeFix = fixableIds.Contains(d.Id)
-                ? d.Id == "QYL0030" ? "Exact replacements only." : "Yes."
+            var codeFix = d.Id == "QYL0030" && fixableIds.Contains(d.Id)
+                ? "Exact replacements only."
+                : fixableIds.Contains(d.Id) && d.Id is not "QYL0031" and not "QYL0032"
+                ? "Yes."
                 : "No.";
             sb.AppendLine($"Code fix: {codeFix}");
             sb.AppendLine();
-        }
+
     }
 
     private static void WritePrecedenceAndSuppression(StringBuilder sb)

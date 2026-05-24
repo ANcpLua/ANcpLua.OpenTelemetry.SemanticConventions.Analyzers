@@ -17,8 +17,8 @@ This package analyzes OpenTelemetry semantic-convention usage in C# consumers. T
 | QYL0014 | Warning | Deprecated semantic-convention value | Yes | A constant string used as the value of a known semantic-convention telemetry attribute matches a value member that is marked [Obsolete] in the consumer's referenced *Values enum class. |
 | QYL0021 | Warning | Incubating semantic-convention member used in a library | No | Members under any *.SemanticConventions.Incubating namespace may rename or change values across minor package releases. Library projects (non-exe, non-test) baking direct references push that volatility onto every downstream consumer. |
 | QYL0030 | Error | Obsolete semantic convention has an exact replacement | Exact replacements only | A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog and has a one-to-one replacement. This supplements, but does not replace, [Obsolete] metadata from OpenTelemetry.SemanticConventions. |
-| QYL0031 | Warning | Semantic convention migration needs review | Exact replacements only | A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement. |
-| QYL0032 | Info | Legacy semantic convention appears in compatibility or test code | Exact replacements only | A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled. |
+| QYL0031 | Warning | Semantic convention migration needs review | No | A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement. |
+| QYL0032 | Info | Legacy semantic convention appears in compatibility or test code | No | A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled. |
 
 ## Rule Reference
 
@@ -102,7 +102,7 @@ Code fix: Exact replacements only.
 
 A hard-coded semantic-convention name or value matches the supplemental OpenTelemetry migration catalog, but the migration is context-sensitive or has no safe automatic replacement.
 
-Code fix: Exact replacements only.
+Code fix: No.
 
 ### QYL0032
 
@@ -110,7 +110,7 @@ Code fix: Exact replacements only.
 
 A hard-coded semantic-convention name or value appears in test, fixture, compatibility, translator, generated, or catalog code. Keep it only when the old schema is intentionally modeled.
 
-Code fix: Exact replacements only.
+Code fix: No.
 
 
 ## Precedence and Suppression
